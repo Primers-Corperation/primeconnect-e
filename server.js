@@ -25,5 +25,13 @@ app.use('/api/sms', smsRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/accounts', accountsRoutes);
 
+app.get("/", (req, res) => {
+  res.json({
+    status: "OK",
+    service: "PrimeConnect API",
+    version: "1.0.0"
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`PrimeConnect backend running on port ${PORT}`));
