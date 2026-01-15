@@ -30,6 +30,11 @@ router.get('/balance/:userId', async (req, res) => {
 router.post('/topup', validateRequest(walletTopupSchema), async (req, res) => {
   const { amount } = req.body;
   const userId = req.userId; // From JWT token, not from request body
+
+  try {
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId, balance: 0 });
     }
     wallet.balance += parseFloat(amount);
     wallet.transactions.push({ type: 'deposit', amount: parseFloat(amount), description: 'Wallet top-up' });

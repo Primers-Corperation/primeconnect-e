@@ -22,6 +22,11 @@ router.get('/available', async (req, res) => {
 router.post('/purchase', validateRequest(accountPurchaseSchema), async (req, res) => {
   const { accountId } = req.body;
   const userId = req.userId; // From JWT token, not from request body
+
+  try {
+    const account = await Account.findById(accountId);
+    if (!account || account.status !== 'available') return res.status(404).json({ status: 'error', message: 'Account not available' });
+
     const wallet = await Wallet.findOne({ userId });
     if (!wallet || wallet.balance < account.price) return res.status(400).json({ status: 'error', message: 'Insufficient balance' });
 
