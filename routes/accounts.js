@@ -3,10 +3,12 @@ import Account from '../models/Account.js';
 import Wallet from '../models/Wallet.js';
 import dotenv from 'dotenv';
 
+import { validateRequest, accountPurchaseSchema } from '../middleware/validation.js';
+
 dotenv.config();
 const router = express.Router();
 
-// Get available accounts
+// Get available accounts (public endpoint)
 router.get('/available', async (req, res) => {
   try {
     const accounts = await Account.find({ status: 'available' });
@@ -17,13 +19,9 @@ router.get('/available', async (req, res) => {
 });
 
 // Purchase account
-router.post('/purchase', async (req, res) => {
-  const { userId, accountId } = req.body;
-  if (!userId || !accountId) return res.status(400).json({ status: 'error', message: 'Missing fields' });
-  try {
-    const account = await Account.findById(accountId);
-    if (!account || account.status !== 'available') return res.status(404).json({ status: 'error', message: 'Account not available' });
-
+router.post('/purchase', validateRequest(accountPurchaseSchema), async (req, res) => {
+  const { accountId } = req.body;
+  const userId = req.userId; // From JWT token, not from request body
     const wallet = await Wallet.findOne({ userId });
     if (!wallet || wallet.balance < account.price) return res.status(400).json({ status: 'error', message: 'Insufficient balance' });
 
