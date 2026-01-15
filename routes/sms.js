@@ -3,6 +3,9 @@ import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import User from '../models/User.js';
 
+import { smsLimiter } from '../middleware/rateLimiter.js';
+import { validateRequest, getNumberSchemaNoUserId } from '../middleware/validation.js';
+
 dotenv.config();
 const router = express.Router();
 
@@ -16,9 +19,9 @@ function buildQuery(params) {
   return q.toString();
 }
 
-router.post('/getNumber', async (req, res) => {
-  const { service, country, maxPrice, providers, exclude, userId } = req.body;
-  if (!service || !country || !userId) return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), async (req, res) => {
+  const { service, country, maxPrice, providers, exclude } = req.body;
+  const userId = req.userId; // From JWT token, not from request body
 
   // TODO: Check user balance before request
 

@@ -3,12 +3,20 @@ import Wallet from '../models/Wallet.js';
 import User from '../models/User.js';
 import dotenv from 'dotenv';
 
+import { validateRequest, walletTopupSchema } from '../middleware/validation.js';
+
 dotenv.config();
 const router = express.Router();
 
 // Get wallet balance
 router.get('/balance/:userId', async (req, res) => {
   const { userId } = req.params;
+
+  // Verify that the token userId matches the requested userId
+  if (req.userId !== userId) {
+    return res.status(403).json({ status: 'error', message: 'Unauthorized' });
+  }
+
   try {
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) return res.status(404).json({ status: 'error', message: 'Wallet not found' });
@@ -19,13 +27,9 @@ router.get('/balance/:userId', async (req, res) => {
 });
 
 // Top up wallet
-router.post('/topup', async (req, res) => {
-  const { userId, amount } = req.body;
-  if (!userId || !amount) return res.status(400).json({ status: 'error', message: 'Missing fields' });
-  try {
-    let wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-      wallet = new Wallet({ userId, balance: 0 });
+router.post('/topup', validateRequest(walletTopupSchema), async (req, res) => {
+  const { amount } = req.body;
+  const userId = req.userId; // From JWT token, not from request body
     }
     wallet.balance += parseFloat(amount);
     wallet.transactions.push({ type: 'deposit', amount: parseFloat(amount), description: 'Wallet top-up' });
