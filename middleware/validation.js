@@ -46,3 +46,8 @@ export const walletTopupSchema = z.object({
 export const accountPurchaseSchema = z.object({
   accountId: z.string().min(1, 'AccountId is required'),
 });
+
+export const smsSendSchema = z.object({
+  phone: z.string().regex(/^234\d{9}$/, 'Phone number must be a valid Nigerian number (e.g., 2348012345678)'),
+  message: z.string().min(1, 'Message is required').max(160, 'Message cannot exceed 160 characters'),
+});
