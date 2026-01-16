@@ -3,8 +3,9 @@ import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import User from '../models/User.js';
 
+import axios from 'axios';
 import { smsLimiter } from '../middleware/rateLimiter.js';
-import { validateRequest, getNumberSchemaNoUserId } from '../middleware/validation.js';
+import { validateRequest, getNumberSchemaNoUserId, smsSendSchema } from '../middleware/validation.js';
 
 dotenv.config();
 const router = express.Router();
@@ -49,6 +50,34 @@ router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), 
   } catch (err) {
     console.error(err);
     return res.status(500).json({ status: 'error', message: 'Server error' });
+  }
+});
+
+router.post('/send', smsLimiter, validateRequest(smsSendSchema), async (req, res) => {
+  const { phone, message } = req.body;
+
+  try {
+    const payload = {
+      to: phone,
+      from: process.env.TERMII_SENDER_ID,
+      sms: message,
+      type: "plain",
+      channel: process.env.TERMII_CHANNEL,
+      api_key: process.env.TERMII_API_KEY,
+    };
+
+    const response = await axios.post('https://api.ng.termii.com/api/sms/send', payload);
+
+    // Termii success response contains message_id
+    const { message_id } = response.data;
+
+    console.log(`SMS Sent | ID: ${message_id} | To: ${phone} | Time: ${new Date().toISOString()}`);
+
+    return res.json({ success: true, messageId: message_id });
+  } catch (error) {
+    console.error('Termii SMS Error:', error.response?.data || error.message);
+    const apiError = error.response?.data?.message || 'Failed to send SMS';
+    return res.status(error.response?.status || 500).json({ success: false, error: apiError });
   }
 });
 
