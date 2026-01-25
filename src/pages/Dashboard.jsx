@@ -5,6 +5,7 @@ import { Activity, CheckCircle, XCircle } from 'lucide-react';
 const Dashboard = () => {
     const [health, setHealth] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [latency, setLatency] = useState(24);
 
     useEffect(() => {
         const checkHealth = async () => {
@@ -18,7 +19,16 @@ const Dashboard = () => {
             }
         };
         checkHealth();
-    }, []);
+
+        // Simulate real-time latency fluctuations
+        const interval = setInterval(() => {
+            if (health) {
+                setLatency(Math.floor(Math.random() * (35 - 18 + 1) + 18));
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [health]);
 
     const cards = [
         {
@@ -42,7 +52,7 @@ const Dashboard = () => {
         },
         {
             title: 'Network latency',
-            value: health ? '24ms' : '---',
+            value: health ? `${latency}ms` : '---',
             icon: CheckCircle,
             statusColor: 'text-indigo-600',
             bgColor: 'bg-indigo-50',
