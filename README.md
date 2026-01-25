@@ -1,16 +1,28 @@
-# React + Vite
+# PrimeConnect Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Premium React-based dashboard for gestioning SMS communications and wallet metrics.
 
-Currently, two official plugins are available:
+## 🚀 Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. **Install dependencies**: `npm install`
+2. **Setup environment**: Create a `.env` file and add:
+   ```env
+   VITE_API_BASE_URL=https://primeconnect-backend.onrender.com
+   ```
+3. **Run local development**: `npm run dev`
 
-## React Compiler
+## 📦 Deployment Requirements (CRITICAL)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+When deploying to **Vercel**, **Render**, or **Netlify**, you MUST set the following Environment Variable in their web dashboard:
 
-## Expanding the ESLint configuration
+| Variable | Value |
+| :--- | :--- |
+| `VITE_API_BASE_URL` | `https://primeconnect-backend.onrender.com` |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+*Failure to set this will result in the application trying to connect to localhost or failing to load data.*
+
+## Features
+- **Messaging Hub**: Direct Termii integration to send SMS.
+- **Finances**: Real-time balance checking and usage visualization.
+- **Control Center**: API health monitoring and system diagnostics.
+- **Security**: In-memory JWT management (Session lost on refresh for maximum safety).
