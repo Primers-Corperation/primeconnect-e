@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, Lock, Wifi, WifiOff } from 'lucide-react';
+import { LogOut, User, Lock, Wifi, WifiOff, Menu } from 'lucide-react';
 import api from '../api/axios';
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
     const { user, logout } = useAuth();
     const [isOnline, setIsOnline] = useState(true);
 
@@ -23,8 +23,14 @@ const Navbar = () => {
     }, []);
 
     return (
-        <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 px-8 py-4 flex justify-between items-center transition-all">
+        <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 px-4 md:px-8 py-4 flex justify-between items-center transition-all">
             <div className="flex items-center gap-3">
+                <button
+                    onClick={onMenuClick}
+                    className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-xl md:hidden transition-colors"
+                >
+                    <Menu size={20} />
+                </button>
                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
                     <Lock className="text-white" size={20} />
                 </div>
