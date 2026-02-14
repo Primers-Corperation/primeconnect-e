@@ -12,7 +12,7 @@ const Navbar = ({ onMenuClick }) => {
             try {
                 await api.get('/');
                 setIsOnline(true);
-            } catch (err) {
+            } catch {
                 setIsOnline(false);
             }
         };

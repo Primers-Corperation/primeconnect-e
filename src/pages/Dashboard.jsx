@@ -12,7 +12,7 @@ const Dashboard = () => {
             try {
                 const res = await api.get('/');
                 setHealth(res.data);
-            } catch (err) {
+            } catch {
                 setHealth(null);
             } finally {
                 setLoading(false);

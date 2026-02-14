@@ -27,7 +27,7 @@ const Wallet = () => {
                 if (data.status === 'success') {
                     setBalance(data.balance);
                 }
-            } catch (err) {
+            } catch {
                 toast.error('Failed to load wallet balance');
             } finally {
                 setLoading(false);
