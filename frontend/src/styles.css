@@ -1,0 +1,146 @@
+/* ============================================================
+   PrimeConnect Design System — Global tokens & base
+   Mixd-inspired: accessibility-first, high-contrast black-on-
+   white, a bright yellow highlight accent, bold grotesque
+   display type and underlined links.
+   Consumed by the compiler as the token/@font-face source.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ---- Brand / accent ------------------------------------ */
+  --pc-yellow:        #ffe500;
+  --pc-yellow-strong: #ffd400;
+  --pc-ink:           #111111;
+
+  --pc-accent:        var(--pc-yellow);       /* highlight + primary fills */
+  --pc-accent-strong: var(--pc-yellow-strong);
+  --pc-accent-grad:   linear-gradient(135deg, #ffe500 0%, #ffd400 100%); /* @kind color */
+  --pc-on-accent:     #111111;                /* text/icons drawn on the accent */
+
+  /* Legacy accent-text aliases repurposed to safe ink so any
+     older reference stays high-contrast on white. */
+  --pc-violet-300:    #111111;
+  --pc-violet-400:    #111111;
+
+  /* ---- Semantic status (accessible on white) ------------- */
+  --pc-success: #0b7a3b;
+  --pc-success-bg: rgba(11,122,59,0.10);
+  --pc-warning: #8a5300;
+  --pc-warning-bg: rgba(197,120,0,0.14);
+  --pc-danger:  #b3261e;
+  --pc-danger-bg: rgba(179,38,30,0.10);
+  --pc-info:    #0b5cad;
+  --pc-info-bg: rgba(11,92,173,0.10);
+
+  /* ---- Neutral ramp (light, paper-first) ----------------- */
+  --pc-bg:        #ffffff;
+  --pc-bg-alt:    #f4f3f1;
+  --pc-surface-1: #ffffff;
+  --pc-surface-2: #f4f3f1;
+  --pc-surface-3: #e8e6e2;
+  --pc-border:    rgba(17,18,18,0.14);
+  --pc-border-strong: rgba(17,18,18,0.42);
+
+  --pc-text:      #111111;
+  --pc-text-muted:#505a5f;
+  --pc-text-dim:  #6f777b;
+
+  /* ---- Typography ---------------------------------------- */
+  --pc-font-display: 'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
+  --pc-font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pc-font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  --pc-text-xs:  12px;
+  --pc-text-sm:  14px;
+  --pc-text-base:16px;
+  --pc-text-lg:  18px;
+  --pc-text-xl:  22px;
+  --pc-text-2xl: 28px;
+  --pc-text-3xl: 36px;
+  --pc-text-4xl: 52px;
+
+  --pc-leading-tight: 1.08;
+  --pc-leading-normal: 1.5;
+
+  /* ---- Radius (squared, editorial) ----------------------- */
+  --pc-radius-sm: 4px;
+  --pc-radius-md: 8px;
+  --pc-radius-lg: 12px;
+  --pc-radius-xl: 14px;
+  --pc-radius-2xl: 20px;
+  --pc-radius-full: 999px;
+
+  /* ---- Spacing (4pt) ------------------------------------- */
+  --pc-space-1: 4px;
+  --pc-space-2: 8px;
+  --pc-space-3: 12px;
+  --pc-space-4: 16px;
+  --pc-space-5: 20px;
+  --pc-space-6: 24px;
+  --pc-space-8: 32px;
+  --pc-space-10: 40px;
+  --pc-space-12: 48px;
+
+  /* ---- Elevation (soft, on white) ------------------------ */
+  --pc-shadow-sm: 0 1px 2px rgba(17,18,18,0.06);
+  --pc-shadow-md: 0 6px 20px rgba(17,18,18,0.08);
+  --pc-shadow-lg: 0 20px 45px rgba(17,18,18,0.12);
+  --pc-glow-accent: 0 6px 20px rgba(255,212,0,0.45);
+
+  /* ---- Focus (accessibility-first, GOV.UK-style) --------- */
+  --pc-focus: 0 0 0 3px var(--pc-yellow), 0 0 0 5px var(--pc-ink);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--pc-font-sans);
+  background: var(--pc-bg);
+  color: var(--pc-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bold grotesque headings + underlined ink links, the Mixd way */
+h1, h2, h3 { font-family: var(--pc-font-display); letter-spacing: -0.02em; }
+
+/* ============================================================
+   Responsive layout — the Dashboard design ships at a single
+   1240px preview width; these rules keep the app shell and
+   dashboard grids usable below that.
+   ============================================================ */
+
+.pc-sidebar { width: 248px; }
+.pc-topbar-search { display: flex; }
+.pc-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.pc-two-col { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.pc-activations-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pc-number-row { display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; }
+.pc-number-row-meta { flex: 1; min-width: 160px; }
+.pc-number-row-tail { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+
+@media (max-width: 900px) {
+  .pc-sidebar { width: 76px; padding: 22px 10px !important; }
+  .pc-sidebar .pc-brand-label,
+  .pc-sidebar .pc-nav-label,
+  .pc-sidebar .pc-user-text { display: none; }
+  .pc-sidebar nav a { justify-content: center; }
+  .pc-two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .pc-topbar-search { display: none; }
+  .pc-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .pc-activations-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .pc-number-row { flex-wrap: wrap; }
+  .pc-number-row-tail { margin-left: 0; width: 100%; justify-content: space-between; }
+}
+
+@media (max-width: 420px) {
+  .pc-stat-grid { grid-template-columns: 1fr; }
+}
