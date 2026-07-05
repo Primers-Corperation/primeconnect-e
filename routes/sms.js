@@ -44,6 +44,49 @@ router.get('/prices', async (req, res) => {
   }
 });
 
+// Real Grizzly country list (passthrough of getCountries) — diagnostic,
+// to confirm real country names/IDs before the catalog UI is built.
+router.get('/countries', async (req, res) => {
+  if (!process.env.GRIZZLY_API_KEY) {
+    return res.status(503).json({ status: 'error', message: 'Not configured yet.' });
+  }
+  const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getCountries' });
+  try {
+    const r = await fetch(`${GRIZZLY_BASE}?${query}`);
+    const text = await r.text();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
+    if (parsed === null) {
+      return res.status(502).json({ status: 'error', message: text || 'Unexpected response from provider' });
+    }
+    return res.json({ status: 'success', countries: parsed });
+  } catch (err) {
+    console.error('Grizzly getCountries error:', err.message);
+    return res.status(502).json({ status: 'error', message: 'Could not fetch countries' });
+  }
+});
+
+// Real Grizzly service list (passthrough of getServicesList) — diagnostic.
+router.get('/services', async (req, res) => {
+  if (!process.env.GRIZZLY_API_KEY) {
+    return res.status(503).json({ status: 'error', message: 'Not configured yet.' });
+  }
+  const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getServicesList' });
+  try {
+    const r = await fetch(`${GRIZZLY_BASE}?${query}`);
+    const text = await r.text();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
+    if (parsed === null) {
+      return res.status(502).json({ status: 'error', message: text || 'Unexpected response from provider' });
+    }
+    return res.json({ status: 'success', services: parsed });
+  } catch (err) {
+    console.error('Grizzly getServicesList error:', err.message);
+    return res.status(502).json({ status: 'error', message: 'Could not fetch services' });
+  }
+});
+
 // List the authenticated user's rented numbers (activations).
 router.get('/activations', async (req, res) => {
   try {
