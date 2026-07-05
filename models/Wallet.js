@@ -7,6 +7,7 @@ const walletSchema = new mongoose.Schema({
     type: { type: String, enum: ['deposit', 'withdrawal', 'purchase'] },
     amount: Number,
     description: String,
+    reference: String, // Paystack reference for deposits, when applicable
     date: { type: Date, default: Date.now }
   }],
   createdAt: { type: Date, default: Date.now }

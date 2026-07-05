@@ -43,6 +43,13 @@ export const walletTopupSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
 });
 
+export const paystackInitSchema = z.object({
+  amount: z
+    .number({ invalid_type_error: 'Amount must be a number' })
+    .min(100, 'Minimum top-up is ₦100')
+    .max(10000000, 'Amount exceeds the maximum top-up limit'),
+});
+
 export const accountPurchaseSchema = z.object({
   accountId: z.string().min(1, 'AccountId is required'),
 });

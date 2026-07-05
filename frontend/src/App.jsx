@@ -5,6 +5,8 @@ import { ProtectedRoute } from './auth/ProtectedRoute.jsx';
 import { Login } from './pages/Login.jsx';
 import { Register } from './pages/Register.jsx';
 import { Dashboard } from './pages/Dashboard.jsx';
+import { Wallet } from './pages/Wallet.jsx';
+import { WalletCallback } from './pages/WalletCallback.jsx';
 import { Placeholder } from './pages/Placeholder.jsx';
 
 function Root() {
@@ -22,7 +24,8 @@ export function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/rent-number" element={<ProtectedRoute><Placeholder title="Rent number" /></ProtectedRoute>} />
         <Route path="/marketplace" element={<ProtectedRoute><Placeholder title="Marketplace" /></ProtectedRoute>} />
-        <Route path="/wallet" element={<ProtectedRoute><Placeholder title="Wallet" /></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/wallet/callback" element={<ProtectedRoute><WalletCallback /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><Placeholder title="History" /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
