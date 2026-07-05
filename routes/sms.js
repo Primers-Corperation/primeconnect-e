@@ -20,6 +20,30 @@ function buildQuery(params) {
   return q.toString();
 }
 
+// Real Grizzly service/country/price catalog (passthrough of getPrices).
+// Returned as-is for now so the exact shape can be verified against the
+// live API before any markup logic is built on top of it.
+router.get('/prices', async (req, res) => {
+  if (!process.env.GRIZZLY_API_KEY) {
+    return res.status(503).json({ status: 'error', message: 'Pricing is not configured yet.' });
+  }
+  const { service, country } = req.query;
+  const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getPrices', service, country });
+  try {
+    const r = await fetch(`${GRIZZLY_BASE}?${query}`);
+    const text = await r.text();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
+    if (parsed === null) {
+      return res.status(502).json({ status: 'error', message: text || 'Unexpected response from provider' });
+    }
+    return res.json({ status: 'success', prices: parsed });
+  } catch (err) {
+    console.error('Grizzly getPrices error:', err.message);
+    return res.status(502).json({ status: 'error', message: 'Could not fetch prices' });
+  }
+});
+
 // List the authenticated user's rented numbers (activations).
 router.get('/activations', async (req, res) => {
   try {
