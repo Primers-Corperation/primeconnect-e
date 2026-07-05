@@ -1,5 +1,11 @@
 import client from './client.js';
 
+// Full wallet: balance + transaction ledger for the logged-in user.
+export async function getWallet() {
+  const { data } = await client.get('/api/wallet');
+  return { balance: data.balance, transactions: data.transactions || [] };
+}
+
 export async function getBalance(userId) {
   const { data } = await client.get(`/api/wallet/balance/${userId}`);
   return data.balance;

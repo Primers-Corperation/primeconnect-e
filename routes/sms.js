@@ -1,7 +1,7 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
-import User from '../models/User.js';
+import Activation from '../models/Activation.js';
 
 import axios from 'axios';
 import { smsLimiter } from '../middleware/rateLimiter.js';
@@ -20,11 +20,24 @@ function buildQuery(params) {
   return q.toString();
 }
 
+// List the authenticated user's rented numbers (activations).
+router.get('/activations', async (req, res) => {
+  try {
+    const activations = await Activation.find({ userId: req.userId }).sort({ createdAt: -1 });
+    res.json({ status: 'success', activations });
+  } catch (err) {
+    console.error('List activations error:', err.message);
+    res.status(500).json({ status: 'error', message: 'Server error' });
+  }
+});
+
 router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), async (req, res) => {
   const { service, country, maxPrice, providers, exclude } = req.body;
   const userId = req.userId; // From JWT token, not from request body
 
-  // TODO: Check user balance before request
+  if (!process.env.GRIZZLY_API_KEY) {
+    return res.status(503).json({ status: 'error', message: 'Number rental is not configured yet.' });
+  }
 
   const query = buildQuery({
     api_key: process.env.GRIZZLY_API_KEY,
@@ -42,8 +55,10 @@ router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), 
 
     if (text.startsWith('ACCESS_NUMBER')) {
       const [, activationId, number] = text.split(':');
-      // TODO: Save activation to DB with userId
-      return res.json({ status: 'success', activationId, number });
+      const activation = await Activation.create({
+        userId, activationId, number, service, country, status: 'pending',
+      });
+      return res.json({ status: 'success', activation });
     }
 
     return res.status(400).json({ status: 'error', message: text });
