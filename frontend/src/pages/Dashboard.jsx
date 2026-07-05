@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/AppShell.jsx';
 import { Button } from '../components/Button/Button.jsx';
 import { StatCard } from '../components/StatCard/StatCard.jsx';
@@ -60,6 +61,7 @@ const TAG_COLORS = {
 
 export function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [balance, setBalance] = useState(null);
   const [balanceError, setBalanceError] = useState('');
   const [loadingBalance, setLoadingBalance] = useState(true);
@@ -185,6 +187,8 @@ export function Dashboard() {
             <WalletCard
               balance={loadingBalance ? 0 : (balance ?? 0)}
               footer={balanceError || (loadingBalance ? 'Loading balance…' : 'Last top-up ₦5,000 · 2 days ago')}
+              onTopUp={() => navigate('/wallet')}
+              onWithdraw={() => navigate('/wallet')}
             />
 
             <div style={{ background: 'var(--pc-surface-1)', border: '1px solid var(--pc-border)', borderRadius: 'var(--pc-radius-xl)', padding: 20 }}>
