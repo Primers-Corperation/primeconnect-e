@@ -5,6 +5,21 @@ import dotenv from 'dotenv';
 dotenv.config();
 const router = express.Router();
 
+// Get the authenticated user's wallet: balance + transaction ledger.
+// Returns a zeroed wallet (never 404) so a brand-new user gets a valid,
+// empty ledger rather than an error.
+router.get('/', async (req, res) => {
+  try {
+    const wallet = await Wallet.findOne({ userId: req.userId });
+    const transactions = wallet
+      ? [...wallet.transactions].sort((a, b) => new Date(b.date) - new Date(a.date))
+      : [];
+    res.json({ status: 'success', balance: wallet ? wallet.balance : 0, transactions });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Server error' });
+  }
+});
+
 // Get wallet balance
 router.get('/balance/:userId', async (req, res) => {
   const { userId } = req.params;
