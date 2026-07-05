@@ -31,6 +31,13 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const profileUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  email: z.string().email('Invalid email').optional(),
+  currentPassword: z.string().min(1).optional(),
+  newPassword: z.string().min(6, 'New password must be at least 6 characters').optional(),
+});
+
 export const getNumberSchemaNoUserId = z.object({
   service: z.string().min(1, 'Service is required'),
   country: z.string().min(1, 'Country is required'),
