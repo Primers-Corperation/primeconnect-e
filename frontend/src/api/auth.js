@@ -9,3 +9,10 @@ export async function register(name, email, password) {
   const { data } = await client.post('/api/auth/register', { name, email, password });
   return data;
 }
+
+// Update the current user's profile. `payload` may include name, email,
+// currentPassword and newPassword.
+export async function updateProfile(payload) {
+  const { data } = await client.put('/api/auth/me', payload);
+  return data.user;
+}

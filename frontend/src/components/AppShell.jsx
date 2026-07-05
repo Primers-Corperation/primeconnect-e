@@ -79,13 +79,13 @@ export function AppShell({ children }) {
         </nav>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: 12, borderRadius: 14, background: 'var(--pc-surface-2)', border: '1px solid var(--pc-border)' }}>
+          <Link to="/settings" title="Settings" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: 12, borderRadius: 14, background: 'var(--pc-surface-2)', border: '1px solid var(--pc-border)', textDecoration: 'none', color: 'inherit' }}>
             <Avatar name={user?.name || ''} size={38} />
             <div className="pc-user-text" style={{ minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name || 'Guest'}</div>
               <div style={{ fontSize: 12, color: 'var(--pc-text-dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email || ''}</div>
             </div>
-          </div>
+          </Link>
           <button
             onClick={logout}
             style={{
