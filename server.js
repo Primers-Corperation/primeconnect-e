@@ -26,9 +26,12 @@ app.use(express.urlencoded({ limit: '10kb' }));
 app.use(generalLimiter);
 
 // MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
+if (!process.env.MONGO_URI) {
+  console.error('MONGO_URI is not set — database-backed routes will fail until it is configured');
+}
+mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 })
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => console.error('MongoDB connection error:', err.message));
 
 // Public routes
 app.use('/api/auth', authRoutes);
