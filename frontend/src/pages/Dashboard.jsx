@@ -81,9 +81,9 @@ export function Dashboard() {
 
   const STATS = [
     { label: 'Wallet balance', value: naira(wallet.balance), icon: ICONS.wallet, accent: 'var(--pc-ink)' },
-    { label: 'Active numbers', value: String(activeCount), icon: ICONS.phone, accent: '#06b6d4' },
-    { label: 'Total funded', value: naira(totalIn), icon: ICONS.arrowDown, accent: '#22c55e' },
-    { label: 'Total spent', value: naira(totalOut), icon: ICONS.arrowUp, accent: '#f59e0b' },
+    { label: 'Active numbers', value: String(activeCount), icon: ICONS.phone, accent: 'var(--pc-ink)' },
+    { label: 'Total funded', value: naira(totalIn), icon: ICONS.arrowDown, accent: 'var(--pc-success)' },
+    { label: 'Total spent', value: naira(totalOut), icon: ICONS.arrowUp, accent: 'var(--pc-danger)' },
   ];
 
   return (
