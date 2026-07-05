@@ -7,7 +7,9 @@ import { Register } from './pages/Register.jsx';
 import { Dashboard } from './pages/Dashboard.jsx';
 import { Wallet } from './pages/Wallet.jsx';
 import { WalletCallback } from './pages/WalletCallback.jsx';
-import { Placeholder } from './pages/Placeholder.jsx';
+import { RentNumber } from './pages/RentNumber.jsx';
+import { Marketplace } from './pages/Marketplace.jsx';
+import { History } from './pages/History.jsx';
 
 function Root() {
   const { token } = useAuth();
@@ -22,11 +24,11 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/rent-number" element={<ProtectedRoute><Placeholder title="Rent number" /></ProtectedRoute>} />
-        <Route path="/marketplace" element={<ProtectedRoute><Placeholder title="Marketplace" /></ProtectedRoute>} />
+        <Route path="/rent-number" element={<ProtectedRoute><RentNumber /></ProtectedRoute>} />
+        <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
         <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
         <Route path="/wallet/callback" element={<ProtectedRoute><WalletCallback /></ProtectedRoute>} />
-        <Route path="/history" element={<ProtectedRoute><Placeholder title="History" /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
