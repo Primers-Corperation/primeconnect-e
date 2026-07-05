@@ -14,10 +14,12 @@
   --pc-yellow-strong: #ffd400;
   --pc-ink:           #111111;
 
-  --pc-accent:        var(--pc-yellow);       /* highlight + primary fills */
-  --pc-accent-strong: var(--pc-yellow-strong);
-  --pc-accent-grad:   linear-gradient(135deg, #ffe500 0%, #ffd400 100%); /* @kind color */
-  --pc-on-accent:     #111111;                /* text/icons drawn on the accent */
+  /* Brand accent — black. Primary fills (buttons, wallet hero, active nav)
+     are near-black with white text. */
+  --pc-accent:        #111111;                /* highlight + primary fills */
+  --pc-accent-strong: #000000;
+  --pc-accent-grad:   linear-gradient(135deg, #1c1c1c 0%, #000000 100%); /* @kind color */
+  --pc-on-accent:     #ffffff;                /* text/icons drawn on the accent */
 
   /* Legacy accent-text aliases repurposed to safe ink so any
      older reference stays high-contrast on white. */
@@ -87,10 +89,10 @@
   --pc-shadow-sm: 0 1px 2px rgba(17,18,18,0.06);
   --pc-shadow-md: 0 6px 20px rgba(17,18,18,0.08);
   --pc-shadow-lg: 0 20px 45px rgba(17,18,18,0.12);
-  --pc-glow-accent: 0 6px 20px rgba(255,212,0,0.45);
+  --pc-glow-accent: 0 6px 20px rgba(17,18,18,0.28);
 
   /* ---- Focus (accessibility-first, GOV.UK-style) --------- */
-  --pc-focus: 0 0 0 3px var(--pc-yellow), 0 0 0 5px var(--pc-ink);
+  --pc-focus: 0 0 0 3px rgba(17,18,18,0.25), 0 0 0 5px var(--pc-ink);
 }
 
 * { box-sizing: border-box; }
