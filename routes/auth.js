@@ -19,19 +19,30 @@ router.post('/register', authLimiter, validateRequest(registerSchema), async (re
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({ status: 'success', token, user });
   } catch (err) {
-    res.status(400).json({ status: 'error', message: 'Email exists or error' });
+    // Only a duplicate-key error means the email is taken; anything else
+    // (e.g. the DB being unreachable) must not be reported as such.
+    if (err.code === 11000) {
+      return res.status(409).json({ status: 'error', message: 'Email already registered' });
+    }
+    console.error('Register error:', err.message);
+    res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
   }
 });
 
 // Login
 router.post('/login', authLimiter, validateRequest(loginSchema), async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ status: 'error', message: 'User not found' });
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(400).json({ status: 'error', message: 'Incorrect password' });
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-  res.json({ status: 'success', token, user });
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ status: 'error', message: 'User not found' });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ status: 'error', message: 'Incorrect password' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ status: 'success', token, user });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
+  }
 });
 
 export default router;
