@@ -1,9 +1,9 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 
+import { connectDB } from './lib/db.js';
 import authRoutes from './routes/auth.js';
 import smsRoutes from './routes/sms.js';
 import walletRoutes from './routes/wallet.js';
@@ -37,15 +37,6 @@ if (!process.env.PAYSTACK_SECRET_KEY) {
 if (!process.env.CLIENT_URL) {
   console.warn('CLIENT_URL is not set — Paystack callback will fall back to the dashboard default');
 }
-mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err.message));
-
-// Public routes
-app.use('/api/auth', authRoutes);
-
-// Paystack webhook — public (authenticated by HMAC signature, not JWT).
-app.post('/api/payment/webhook', paystackWebhook);
 
 app.get("/", (req, res) => {
   res.json({
@@ -54,6 +45,25 @@ app.get("/", (req, res) => {
     version: "1.0.0"
   });
 });
+
+// Every remaining route needs the DB — connect once (reusing the cached
+// connection across warm invocations) before reaching any of them, and
+// fail fast and consistently if it's genuinely unreachable.
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
+  }
+});
+
+// Public routes
+app.use('/api/auth', authRoutes);
+
+// Paystack webhook — public (authenticated by HMAC signature, not JWT).
+app.post('/api/payment/webhook', paystackWebhook);
 
 // Protected routes (JWT required)
 app.use('/api/sms', verifyToken, smsRoutes);
