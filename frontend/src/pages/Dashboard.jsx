@@ -8,7 +8,13 @@ import { NumberCard } from '../components/NumberCard/NumberCard.jsx';
 import { TransactionRow } from '../components/TransactionRow/TransactionRow.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { getWallet } from '../api/wallet.js';
-import { getActivations } from '../api/sms.js';
+import { getActivations, cancelActivation } from '../api/sms.js';
+import { useActivationPolling } from '../hooks/useActivationPolling.js';
+
+const CANCEL_WINDOW_MS = 15 * 60 * 1000;
+function withinCancelWindow(createdAt) {
+  return Date.now() - new Date(createdAt).getTime() < CANCEL_WINDOW_MS;
+}
 
 function Icon({ d, color }) {
   return (
@@ -73,6 +79,23 @@ export function Dashboard() {
     return () => { cancelled = true; };
   }, []);
 
+  useActivationPolling(activations, setActivations);
+
+  const handleCopy = (code) => {
+    if (code) navigator.clipboard?.writeText(code);
+  };
+
+  const handleCancel = async (activation) => {
+    try {
+      await cancelActivation(activation._id);
+      setActivations((prev) => prev.map((a) => (a._id === activation._id ? { ...a, status: 'cancelled' } : a)));
+      const w = await getWallet();
+      setWallet(w);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not cancel this rental.');
+    }
+  };
+
   const firstName = (user?.name || 'there').trim().split(/\s+/)[0];
   const txns = wallet.transactions || [];
   const activeCount = activations.filter((a) => ['pending', 'active'].includes(a.status)).length;
@@ -126,11 +149,14 @@ export function Dashboard() {
                 {activations.slice(0, 6).map((a) => (
                   <NumberCard
                     key={a._id || a.activationId}
-                    service={a.service}
+                    service={a.serviceName || a.service}
                     number={a.number}
                     country={a.country}
                     status={a.status}
                     price={a.cost || 0}
+                    code={a.code}
+                    onCopy={a.code ? () => handleCopy(a.code) : undefined}
+                    onCancel={a.status === 'pending' && withinCancelWindow(a.createdAt) ? () => handleCancel(a) : undefined}
                   />
                 ))}
               </div>
