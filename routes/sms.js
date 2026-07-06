@@ -11,6 +11,7 @@ import { KNOWN_SERVICES, KNOWN_COUNTRIES, DEFAULT_COUNTRY_ID, findKnownService, 
 
 const NIGERIA_COUNTRY_ID = String(DEFAULT_COUNTRY_ID); // verified against GET /api/sms/countries
 const CANCEL_WINDOW_MS = 15 * 60 * 1000;
+const EXPIRE_WINDOW_MS = 10 * 60 * 1000;
 
 dotenv.config();
 const router = express.Router();
@@ -157,10 +158,39 @@ router.get('/activations', async (req, res) => {
   }
 });
 
+// Calls Grizzly's setStatus (cancel) for an activation and, only on an
+// explicit recognized success (ACCESS_CANCEL), marks it `finalStatus` and
+// refunds the wallet. An ambiguous/unrecognized provider response never
+// refunds or changes status — shared by both the manual cancel endpoint
+// and the automatic no-code expiry below, so both follow the same
+// fail-safe rule.
+async function cancelAndRefund(activation, finalStatus, refundDescription) {
+  const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'setStatus', id: activation.activationId, status: 8 });
+  const r = await fetch(`${GRIZZLY_BASE}?${query}`);
+  const text = await r.text();
+
+  if (text !== 'ACCESS_CANCEL') {
+    console.error('Cancel not confirmed by provider:', text);
+    return { refunded: false };
+  }
+
+  activation.status = finalStatus;
+  await activation.save();
+  const wallet = await Wallet.findOneAndUpdate(
+    { userId: activation.userId },
+    { $inc: { balance: activation.cost }, $push: { transactions: { type: 'deposit', amount: activation.cost, description: refundDescription } } },
+    { new: true }
+  );
+  return { refunded: true, balance: wallet ? wallet.balance : undefined };
+}
+
 // Check (and persist) the real status/OTP code of one of the user's
 // activations. Response codes follow the documented SMS-activation-style
 // convention; anything unrecognized is a no-op rather than a guess, so an
-// unexpected format never corrupts activation state.
+// unexpected format never corrupts activation state. If still pending
+// after 10 minutes with no code, automatically cancels and refunds —
+// same fail-safe rule as manual cancel (no confirmed provider cancel, no
+// refund).
 router.get('/activations/:id/status', async (req, res) => {
   if (!process.env.GRIZZLY_API_KEY) {
     return res.status(503).json({ status: 'error', message: 'Not configured yet.' });
@@ -182,7 +212,10 @@ router.get('/activations/:id/status', async (req, res) => {
       activation.status = 'cancelled';
       await activation.save();
     } else if (text === 'STATUS_WAIT_CODE' || text.startsWith('STATUS_WAIT_')) {
-      // still pending — nothing to persist
+      const ageMs = Date.now() - new Date(activation.createdAt).getTime();
+      if (ageMs > EXPIRE_WINDOW_MS) {
+        await cancelAndRefund(activation, 'expired', 'Refund: rental expired (no code received)');
+      }
     } else {
       console.error('Unrecognized getStatus response:', text);
     }
@@ -214,24 +247,11 @@ router.post('/activations/:id/cancel', async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'The 15-minute cancellation window has passed.' });
     }
 
-    const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'setStatus', id: activation.activationId, status: 8 });
-    const r = await fetch(`${GRIZZLY_BASE}?${query}`);
-    const text = await r.text();
-
-    if (text !== 'ACCESS_CANCEL') {
-      console.error('Cancel not confirmed by provider:', text);
+    const result = await cancelAndRefund(activation, 'cancelled', 'Refund: cancelled rental');
+    if (!result.refunded) {
       return res.status(502).json({ status: 'error', message: 'Could not cancel this rental. Please try again.' });
     }
-
-    activation.status = 'cancelled';
-    await activation.save();
-    const wallet = await Wallet.findOneAndUpdate(
-      { userId: req.userId },
-      { $inc: { balance: activation.cost }, $push: { transactions: { type: 'deposit', amount: activation.cost, description: `Refund: cancelled rental` } } },
-      { new: true }
-    );
-
-    return res.json({ status: 'success', balance: wallet ? wallet.balance : undefined });
+    return res.json({ status: 'success', balance: result.balance });
   } catch (err) {
     console.error('Cancel error:', err.message);
     return res.status(502).json({ status: 'error', message: 'Could not cancel this rental' });
