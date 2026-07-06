@@ -2,10 +2,14 @@ import express from 'express';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import Activation from '../models/Activation.js';
+import Wallet from '../models/Wallet.js';
 
 import axios from 'axios';
 import { smsLimiter } from '../middleware/rateLimiter.js';
 import { validateRequest, getNumberSchemaNoUserId, smsSendSchema } from '../middleware/validation.js';
+import { KNOWN_SERVICES, findKnownService, usdCostToNgnPrice } from '../lib/catalog.js';
+
+const NIGERIA_COUNTRY_ID = '19'; // verified against GET /api/sms/countries
 
 dotenv.config();
 const router = express.Router();
@@ -19,6 +23,46 @@ function buildQuery(params) {
   });
   return q.toString();
 }
+
+// Real, priced catalog of our supported services for a country (default
+// Nigeria). One getPrices call returns every service for that country;
+// we pick out the known/supported ones, convert Grizzly's USD cost to
+// NGN at the live rate, and apply the retail markup.
+router.get('/catalog', async (req, res) => {
+  if (!process.env.GRIZZLY_API_KEY) {
+    return res.status(503).json({ status: 'error', message: 'Catalog is not configured yet.' });
+  }
+  const country = req.query.country || NIGERIA_COUNTRY_ID;
+  const minPrice = req.query.minPrice != null ? Number(req.query.minPrice) : null;
+  const maxPrice = req.query.maxPrice != null ? Number(req.query.maxPrice) : null;
+
+  const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getPrices', country });
+  try {
+    const r = await fetch(`${GRIZZLY_BASE}?${query}`);
+    const text = await r.text();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
+    const countryBlock = parsed && parsed[String(country)];
+    if (!countryBlock) {
+      return res.status(502).json({ status: 'error', message: 'Could not load prices for this country' });
+    }
+
+    const items = [];
+    for (const svc of KNOWN_SERVICES) {
+      const entry = countryBlock[svc.code];
+      if (!entry || !entry.count) continue; // no stock right now
+      const priceNgn = await usdCostToNgnPrice(entry.cost);
+      if (minPrice != null && priceNgn < minPrice) continue;
+      if (maxPrice != null && priceNgn > maxPrice) continue;
+      items.push({ service: svc.code, name: svc.name, icon: svc.icon, priceNgn, available: entry.count });
+    }
+    items.sort((a, b) => a.priceNgn - b.priceNgn);
+    return res.json({ status: 'success', country: Number(country), items });
+  } catch (err) {
+    console.error('Catalog error:', err.message);
+    return res.status(502).json({ status: 'error', message: 'Could not load catalog' });
+  }
+});
 
 // Real Grizzly service/country/price catalog (passthrough of getPrices).
 // Returned as-is for now so the exact shape can be verified against the
@@ -99,22 +143,48 @@ router.get('/activations', async (req, res) => {
 });
 
 router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), async (req, res) => {
-  const { service, country, maxPrice, providers, exclude } = req.body;
+  const { service, country } = req.body;
   const userId = req.userId; // From JWT token, not from request body
 
   if (!process.env.GRIZZLY_API_KEY) {
     return res.status(503).json({ status: 'error', message: 'Number rental is not configured yet.' });
   }
 
-  const query = buildQuery({
-    api_key: process.env.GRIZZLY_API_KEY,
-    action: 'getNumber',
-    service,
-    country,
-    maxPrice,
-    providerIds: providers,
-    exceptProviderIds: exclude
-  });
+  const known = findKnownService(service);
+  if (!known) {
+    return res.status(400).json({ status: 'error', message: 'Unsupported service.' });
+  }
+
+  // Look up the live, authoritative price for this exact service+country —
+  // never trust a client-supplied price.
+  let priceNgn;
+  try {
+    const priceQuery = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getPrices', service, country });
+    const pr = await fetch(`${GRIZZLY_BASE}?${priceQuery}`);
+    const priceData = JSON.parse(await pr.text());
+    const entry = priceData?.[String(country)]?.[service];
+    if (!entry || !entry.count) {
+      return res.status(400).json({ status: 'error', message: 'This number is not currently available.' });
+    }
+    priceNgn = await usdCostToNgnPrice(entry.cost);
+  } catch (err) {
+    console.error('Price lookup error:', err.message);
+    return res.status(502).json({ status: 'error', message: 'Could not determine price. Please try again.' });
+  }
+
+  // Reserve funds atomically (conditional on sufficient balance) before
+  // calling Grizzly, so two concurrent rentals can't both succeed against
+  // a balance that only covers one. Refunded below if Grizzly fails.
+  const wallet = await Wallet.findOneAndUpdate(
+    { userId, balance: { $gte: priceNgn } },
+    { $inc: { balance: -priceNgn } },
+    { new: true }
+  );
+  if (!wallet) {
+    return res.status(400).json({ status: 'error', message: 'Insufficient wallet balance.' });
+  }
+
+  const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getNumber', service, country });
 
   try {
     const r = await fetch(`${GRIZZLY_BASE}?${query}`);
@@ -122,15 +192,24 @@ router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), 
 
     if (text.startsWith('ACCESS_NUMBER')) {
       const [, activationId, number] = text.split(':');
+      wallet.transactions.push({
+        type: 'purchase',
+        amount: -priceNgn,
+        description: `${known.name} number rental`,
+      });
+      await wallet.save();
       const activation = await Activation.create({
-        userId, activationId, number, service, country, status: 'pending',
+        userId, activationId, number, service, country, status: 'pending', cost: priceNgn,
       });
       return res.json({ status: 'success', activation });
     }
 
+    // Grizzly didn't provide a number — refund the reservation.
+    await Wallet.updateOne({ userId }, { $inc: { balance: priceNgn } });
     return res.status(400).json({ status: 'error', message: text });
   } catch (err) {
     console.error(err);
+    await Wallet.updateOne({ userId }, { $inc: { balance: priceNgn } });
     return res.status(500).json({ status: 'error', message: 'Server error' });
   }
 });
