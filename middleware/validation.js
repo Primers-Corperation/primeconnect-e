@@ -41,9 +41,6 @@ export const profileUpdateSchema = z.object({
 export const getNumberSchemaNoUserId = z.object({
   service: z.string().min(1, 'Service is required'),
   country: z.string().min(1, 'Country is required'),
-  maxPrice: z.number().optional(),
-  providers: z.array(z.string()).optional(),
-  exclude: z.array(z.string()).optional(),
 });
 
 export const walletTopupSchema = z.object({
