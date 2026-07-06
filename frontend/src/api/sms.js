@@ -11,3 +11,9 @@ export async function rentNumber({ service, country }) {
   const { data } = await client.post('/api/sms/getNumber', { service, country });
   return data.activation;
 }
+
+// Real, priced catalog of supported services for a country (default Nigeria).
+export async function getCatalog({ country, minPrice, maxPrice } = {}) {
+  const { data } = await client.get('/api/sms/catalog', { params: { country, minPrice, maxPrice } });
+  return data.items || [];
+}
