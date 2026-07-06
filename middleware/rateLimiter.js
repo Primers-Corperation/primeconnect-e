@@ -22,3 +22,11 @@ export const generalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const supportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // 5 support reports per hour
+  message: 'Too many support requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});

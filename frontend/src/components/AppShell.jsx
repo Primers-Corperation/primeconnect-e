@@ -29,6 +29,11 @@ const NAV = [
     label: 'History',
     icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z',
   },
+  {
+    to: '/support',
+    label: 'Help & support',
+    icon: 'M12 22a10 10 0 100-20 10 10 0 000 20zM9.09 9a3 3 0 015.83 1c0 2-3 2-3 4M12 17h.01',
+  },
 ];
 
 function NavIcon({ d }) {

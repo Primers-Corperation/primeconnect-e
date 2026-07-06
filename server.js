@@ -9,6 +9,7 @@ import smsRoutes from './routes/sms.js';
 import walletRoutes from './routes/wallet.js';
 import accountsRoutes from './routes/accounts.js';
 import paymentRoutes, { paystackWebhook } from './routes/payment.js';
+import supportRoutes from './routes/support.js';
 
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { verifyToken } from './middleware/jwtMiddleware.js';
@@ -36,6 +37,9 @@ if (!process.env.PAYSTACK_SECRET_KEY) {
 }
 if (!process.env.CLIENT_URL) {
   console.warn('CLIENT_URL is not set — Paystack callback will fall back to the dashboard default');
+}
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  console.warn('EMAIL_USER/EMAIL_PASS are not set — support reports will fail until they are configured');
 }
 
 app.get("/", (req, res) => {
@@ -72,6 +76,7 @@ app.use('/api/sms', verifyToken, smsRoutes);
 app.use('/api/wallet/paystack', verifyToken, paymentRoutes);
 app.use('/api/wallet', verifyToken, walletRoutes);
 app.use('/api/accounts', verifyToken, accountsRoutes);
+app.use('/api/support', verifyToken, supportRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`PrimeConnect backend running on port ${PORT}`));
