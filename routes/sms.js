@@ -7,9 +7,10 @@ import Wallet from '../models/Wallet.js';
 import axios from 'axios';
 import { smsLimiter } from '../middleware/rateLimiter.js';
 import { validateRequest, getNumberSchemaNoUserId, smsSendSchema } from '../middleware/validation.js';
-import { KNOWN_SERVICES, findKnownService, usdCostToNgnPrice } from '../lib/catalog.js';
+import { KNOWN_SERVICES, KNOWN_COUNTRIES, DEFAULT_COUNTRY_ID, findKnownService, usdCostToNgnPrice } from '../lib/catalog.js';
 
-const NIGERIA_COUNTRY_ID = '19'; // verified against GET /api/sms/countries
+const NIGERIA_COUNTRY_ID = String(DEFAULT_COUNTRY_ID); // verified against GET /api/sms/countries
+const CANCEL_WINDOW_MS = 15 * 60 * 1000;
 
 dotenv.config();
 const router = express.Router();
@@ -35,6 +36,7 @@ router.get('/catalog', async (req, res) => {
   const country = req.query.country || NIGERIA_COUNTRY_ID;
   const minPrice = req.query.minPrice != null ? Number(req.query.minPrice) : null;
   const maxPrice = req.query.maxPrice != null ? Number(req.query.maxPrice) : null;
+  const search = req.query.search ? String(req.query.search).toLowerCase().trim() : '';
 
   const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getPrices', country });
   try {
@@ -49,6 +51,7 @@ router.get('/catalog', async (req, res) => {
 
     const items = [];
     for (const svc of KNOWN_SERVICES) {
+      if (search && !svc.name.toLowerCase().includes(search)) continue;
       const entry = countryBlock[svc.code];
       if (!entry || !entry.count) continue; // no stock right now
       const priceNgn = await usdCostToNgnPrice(entry.cost);
@@ -62,6 +65,11 @@ router.get('/catalog', async (req, res) => {
     console.error('Catalog error:', err.message);
     return res.status(502).json({ status: 'error', message: 'Could not load catalog' });
   }
+});
+
+// Curated country list for the picker (lightweight vs. Grizzly's raw 200+).
+router.get('/supported-countries', (req, res) => {
+  res.json({ status: 'success', countries: KNOWN_COUNTRIES });
 });
 
 // Real Grizzly service/country/price catalog (passthrough of getPrices).
@@ -131,14 +139,102 @@ router.get('/services', async (req, res) => {
   }
 });
 
-// List the authenticated user's rented numbers (activations).
+// List the authenticated user's rented numbers (activations), enriched
+// with the friendly service name/icon (activations only store the raw
+// Grizzly code).
 router.get('/activations', async (req, res) => {
   try {
     const activations = await Activation.find({ userId: req.userId }).sort({ createdAt: -1 });
-    res.json({ status: 'success', activations });
+    const enriched = activations.map((a) => {
+      const known = findKnownService(a.service);
+      const obj = a.toObject();
+      return { ...obj, serviceName: known?.name || a.service, serviceIcon: known?.icon || a.service };
+    });
+    res.json({ status: 'success', activations: enriched });
   } catch (err) {
     console.error('List activations error:', err.message);
     res.status(500).json({ status: 'error', message: 'Server error' });
+  }
+});
+
+// Check (and persist) the real status/OTP code of one of the user's
+// activations. Response codes follow the documented SMS-activation-style
+// convention; anything unrecognized is a no-op rather than a guess, so an
+// unexpected format never corrupts activation state.
+router.get('/activations/:id/status', async (req, res) => {
+  if (!process.env.GRIZZLY_API_KEY) {
+    return res.status(503).json({ status: 'error', message: 'Not configured yet.' });
+  }
+  try {
+    const activation = await Activation.findOne({ _id: req.params.id, userId: req.userId });
+    if (!activation) return res.status(404).json({ status: 'error', message: 'Activation not found' });
+
+    const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'getStatus', id: activation.activationId });
+    const r = await fetch(`${GRIZZLY_BASE}?${query}`);
+    const text = await r.text();
+
+    if (text.startsWith('STATUS_OK')) {
+      const [, code] = text.split(':');
+      activation.status = 'active';
+      activation.code = code;
+      await activation.save();
+    } else if (text === 'STATUS_CANCEL') {
+      activation.status = 'cancelled';
+      await activation.save();
+    } else if (text === 'STATUS_WAIT_CODE' || text.startsWith('STATUS_WAIT_')) {
+      // still pending — nothing to persist
+    } else {
+      console.error('Unrecognized getStatus response:', text);
+    }
+
+    const known = findKnownService(activation.service);
+    const obj = activation.toObject();
+    return res.json({ status: 'success', activation: { ...obj, serviceName: known?.name || activation.service, serviceIcon: known?.icon || activation.service } });
+  } catch (err) {
+    console.error('Status check error:', err.message);
+    return res.status(502).json({ status: 'error', message: 'Could not check status' });
+  }
+});
+
+// Cancel a pending rental within the 15-minute window, refunding the
+// wallet only on an explicit, recognized cancellation success from
+// Grizzly — an ambiguous response never triggers a refund.
+router.post('/activations/:id/cancel', async (req, res) => {
+  if (!process.env.GRIZZLY_API_KEY) {
+    return res.status(503).json({ status: 'error', message: 'Not configured yet.' });
+  }
+  try {
+    const activation = await Activation.findOne({ _id: req.params.id, userId: req.userId });
+    if (!activation) return res.status(404).json({ status: 'error', message: 'Activation not found' });
+    if (activation.status !== 'pending') {
+      return res.status(400).json({ status: 'error', message: 'This rental can no longer be cancelled.' });
+    }
+    const ageMs = Date.now() - new Date(activation.createdAt).getTime();
+    if (ageMs > CANCEL_WINDOW_MS) {
+      return res.status(400).json({ status: 'error', message: 'The 15-minute cancellation window has passed.' });
+    }
+
+    const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'setStatus', id: activation.activationId, status: 8 });
+    const r = await fetch(`${GRIZZLY_BASE}?${query}`);
+    const text = await r.text();
+
+    if (text !== 'ACCESS_CANCEL') {
+      console.error('Cancel not confirmed by provider:', text);
+      return res.status(502).json({ status: 'error', message: 'Could not cancel this rental. Please try again.' });
+    }
+
+    activation.status = 'cancelled';
+    await activation.save();
+    const wallet = await Wallet.findOneAndUpdate(
+      { userId: req.userId },
+      { $inc: { balance: activation.cost }, $push: { transactions: { type: 'deposit', amount: activation.cost, description: `Refund: cancelled rental` } } },
+      { new: true }
+    );
+
+    return res.json({ status: 'success', balance: wallet ? wallet.balance : undefined });
+  } catch (err) {
+    console.error('Cancel error:', err.message);
+    return res.status(502).json({ status: 'error', message: 'Could not cancel this rental' });
   }
 });
 

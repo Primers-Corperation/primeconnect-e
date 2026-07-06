@@ -8,6 +8,7 @@ const activationSchema = new mongoose.Schema({
   country: String,
   status: { type: String, default: 'pending' },
   cost: Number,
+  code: String, // the received OTP/SMS code, once available
   createdAt: { type: Date, default: Date.now }
 });
 
