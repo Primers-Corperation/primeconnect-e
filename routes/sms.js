@@ -167,7 +167,7 @@ router.get('/activations', async (req, res) => {
 async function cancelAndRefund(activation, finalStatus, refundDescription) {
   const query = buildQuery({ api_key: process.env.GRIZZLY_API_KEY, action: 'setStatus', id: activation.activationId, status: 8 });
   const r = await fetch(`${GRIZZLY_BASE}?${query}`);
-  const text = await r.text();
+  const text = (await r.text()).trim();
 
   if (text !== 'ACCESS_CANCEL') {
     console.error('Cancel not confirmed by provider:', text);
