@@ -10,7 +10,7 @@ import { Badge } from '../Badge/Badge.jsx';
 export function NumberCard({
   service = 'WhatsApp', number = '', country = 'Nigeria',
   code = '', status = 'pending', price = 0, timeLeft = '',
-  onCopy, onCancel,
+  onCopy, onCancel, cancelDisabled = false,
 }) {
   const waiting = !code;
   const naira = '\u20A6' + (Number(price) || 0).toLocaleString('en-NG');
@@ -76,11 +76,12 @@ export function NumberCard({
       </div>
 
       {onCancel ? (
-        <button onClick={onCancel} style={{
+        <button disabled={cancelDisabled} onClick={onCancel} style={{
           marginTop: 14, width: '100%', border: '1px solid var(--pc-border-strong)', background: 'transparent',
-          color: 'var(--pc-text-muted)', cursor: 'pointer', fontWeight: 600, fontSize: 13.5,
+          color: 'var(--pc-text-muted)', cursor: cancelDisabled ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13.5,
+          opacity: cancelDisabled ? 0.6 : 1,
           padding: '10px', borderRadius: 10, fontFamily: 'inherit',
-        }}>Cancel activation</button>
+        }}>{cancelDisabled ? 'Cancelling...' : 'Cancel activation'}</button>
       ) : null}
 
       <style>{'@keyframes pc-spin{to{transform:rotate(360deg)}}'}</style>
