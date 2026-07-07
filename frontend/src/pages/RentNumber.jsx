@@ -34,6 +34,7 @@ export function RentNumber() {
   const [loadError, setLoadError] = useState('');
   const [range, setRange] = useState(RANGES[0]);
   const [renting, setRenting] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
 
@@ -87,12 +88,16 @@ export function RentNumber() {
   };
 
   const handleCancel = async () => {
-    if (!result) return;
+    if (!result || cancelling) return;
+    setError('');
+    setCancelling(true);
     try {
       await cancelActivation(result._id);
       setResult((prev) => (prev ? { ...prev, status: 'cancelled' } : prev));
     } catch (err) {
       setError(err.response?.data?.message || 'Could not cancel this rental.');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -156,6 +161,7 @@ export function RentNumber() {
               code={result.code}
               onCopy={result.code ? () => handleCopy(result.code) : undefined}
               onCancel={result.status === 'pending' && withinCancelWindow(result.createdAt) ? handleCancel : undefined}
+              cancelDisabled={cancelling}
             />
           </div>
         ) : null}
