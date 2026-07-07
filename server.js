@@ -10,6 +10,7 @@ import walletRoutes from './routes/wallet.js';
 import accountsRoutes from './routes/accounts.js';
 import paymentRoutes, { paystackWebhook } from './routes/payment.js';
 import supportRoutes from './routes/support.js';
+import withdrawalRoutes from './routes/withdrawal.js';
 
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { verifyToken } from './middleware/jwtMiddleware.js';
@@ -71,9 +72,10 @@ app.post('/api/payment/webhook', paystackWebhook);
 
 // Protected routes (JWT required)
 app.use('/api/sms', verifyToken, smsRoutes);
-// Mount the Paystack top-up routes before the generic wallet router so the
-// more specific /paystack path matches first.
+// Mount the Paystack top-up and withdrawal routes before the generic
+// wallet router so the more specific paths match first.
 app.use('/api/wallet/paystack', verifyToken, paymentRoutes);
+app.use('/api/wallet/withdraw', verifyToken, withdrawalRoutes);
 app.use('/api/wallet', verifyToken, walletRoutes);
 app.use('/api/accounts', verifyToken, accountsRoutes);
 app.use('/api/support', verifyToken, supportRoutes);

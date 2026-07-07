@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 
 import Payment from '../models/Payment.js';
+import Withdrawal from '../models/Withdrawal.js';
 import Wallet from '../models/Wallet.js';
 import User from '../models/User.js';
 import { initializeTransaction, verifyTransaction } from '../lib/paystack.js';
@@ -39,6 +40,30 @@ async function creditIfPending(reference, paystackAmountKobo, channel) {
   });
   await wallet.save();
   return wallet.balance;
+}
+
+// Idempotently resolve a withdrawal to its final state. The status
+// transition is atomic (pending -> finalStatus): only the caller that wins
+// the transition acts on it, so webhook retries are always safe. Only a
+// failed/reversed outcome refunds the wallet — a success needs no wallet
+// change (it was already debited when the withdrawal was requested).
+async function resolveWithdrawal(reference, finalStatus) {
+  const withdrawal = await Withdrawal.findOneAndUpdate(
+    { reference, status: 'pending' },
+    { status: finalStatus },
+    { new: true }
+  );
+  if (!withdrawal) return; // already resolved or unknown reference
+
+  if (finalStatus === 'failed' || finalStatus === 'reversed') {
+    await Wallet.findOneAndUpdate(
+      { userId: withdrawal.userId },
+      {
+        $inc: { balance: withdrawal.amount },
+        $push: { transactions: { type: 'deposit', amount: withdrawal.amount, description: `Refund: withdrawal ${finalStatus}`, reference } },
+      }
+    );
+  }
 }
 
 // ---- Protected router (mounted under /api/wallet/paystack, requires JWT) ----
@@ -112,10 +137,17 @@ export async function paystackWebhook(req, res) {
     if (event?.event === 'charge.success') {
       const { reference, amount, channel } = event.data;
       await creditIfPending(reference, amount, channel);
+    } else if (event?.event === 'transfer.success') {
+      await resolveWithdrawal(event.data.reference, 'success');
+    } else if (event?.event === 'transfer.failed') {
+      await resolveWithdrawal(event.data.reference, 'failed');
+    } else if (event?.event === 'transfer.reversed') {
+      await resolveWithdrawal(event.data.reference, 'reversed');
     }
     return res.sendStatus(200);
   } catch (err) {
-    // Return 500 so Paystack retries; creditIfPending is idempotent so retries are safe.
+    // Return 500 so Paystack retries; both handlers above are idempotent
+    // (atomic pending -> finalStatus transitions), so retries are safe.
     console.error('Paystack webhook processing error:', err.message);
     return res.sendStatus(500);
   }
