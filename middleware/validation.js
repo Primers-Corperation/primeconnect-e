@@ -67,3 +67,17 @@ export const supportReportSchema = z.object({
   subject: z.string().min(1, 'Subject is required').max(150),
   message: z.string().min(1, 'Message is required').max(4000),
 });
+
+export const resolveAccountSchema = z.object({
+  accountNumber: z.string().regex(/^\d{10}$/, 'Enter a valid 10-digit account number'),
+  bankCode: z.string().min(1, 'Bank is required'),
+});
+
+export const withdrawalSchema = z.object({
+  amount: z
+    .number({ invalid_type_error: 'Amount must be a number' })
+    .min(1000, 'Minimum withdrawal is ₦1,000')
+    .max(10000000, 'Amount exceeds the maximum withdrawal limit'),
+  accountNumber: z.string().regex(/^\d{10}$/, 'Enter a valid 10-digit account number'),
+  bankCode: z.string().min(1, 'Bank is required'),
+});
