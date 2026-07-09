@@ -1,0 +1,844 @@
+/* ============================================================
+   PrimeConnect Design System — v2
+   Fluid typography · Animated sidebar · Responsive grids
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* ──────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   ────────────────────────────────────────────────────────── */
+:root {
+  /* ---- Brand / accent ------------------------------------ */
+  --pc-yellow:        #ffe500;
+  --pc-yellow-strong: #ffd400;
+  --pc-ink:           #111111;
+
+  --pc-accent:        #111111;
+  --pc-accent-strong: #000000;
+  --pc-accent-grad:   linear-gradient(135deg, #1c1c1c 0%, #000000 100%);
+  --pc-on-accent:     #ffffff;
+
+  --pc-violet-300:    #111111;
+  --pc-violet-400:    #111111;
+
+  /* ---- Status -------------------------------------------- */
+  --pc-success:    #0b7a3b;
+  --pc-success-bg: rgba(11,122,59,0.10);
+  --pc-warning:    #8a5300;
+  --pc-warning-bg: rgba(197,120,0,0.14);
+  --pc-danger:     #b3261e;
+  --pc-danger-bg:  rgba(179,38,30,0.10);
+  --pc-info:       #0b5cad;
+  --pc-info-bg:    rgba(11,92,173,0.10);
+
+  /* ---- Neutral ------------------------------------------- */
+  --pc-bg:        #f8f7f5;
+  --pc-bg-alt:    #f4f3f1;
+  --pc-surface-1: #ffffff;
+  --pc-surface-2: #f4f3f1;
+  --pc-surface-3: #e8e6e2;
+  --pc-border:    rgba(17,18,18,0.10);
+  --pc-border-strong: rgba(17,18,18,0.30);
+
+  --pc-text:      #111111;
+  --pc-text-muted:#505a5f;
+  --pc-text-dim:  #6f777b;
+
+  /* ---- Typography (fluid clamp values) ------------------- */
+  --pc-font-display: 'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
+  --pc-font-sans:    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pc-font-mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* clamp(min, preferred, max) — scales fluidly 320→1280px */
+  --pc-text-xs:   clamp(10px, 1.5vw, 12px);
+  --pc-text-sm:   clamp(12px, 1.8vw, 14px);
+  --pc-text-base: clamp(14px, 2vw,   16px);
+  --pc-text-lg:   clamp(16px, 2.5vw, 18px);
+  --pc-text-xl:   clamp(18px, 3vw,   22px);
+  --pc-text-2xl:  clamp(22px, 3.5vw, 28px);
+  --pc-text-3xl:  clamp(26px, 4vw,   36px);
+  --pc-text-4xl:  clamp(32px, 5vw,   52px);
+
+  --pc-leading-tight:  1.08;
+  --pc-leading-normal: 1.55;
+
+  /* ---- Radius -------------------------------------------- */
+  --pc-radius-sm:  4px;
+  --pc-radius-md:  8px;
+  --pc-radius-lg:  12px;
+  --pc-radius-xl:  16px;
+  --pc-radius-2xl: 22px;
+  --pc-radius-full: 999px;
+
+  /* ---- Spacing (4pt grid) -------------------------------- */
+  --pc-space-1:  4px;
+  --pc-space-2:  8px;
+  --pc-space-3:  12px;
+  --pc-space-4:  16px;
+  --pc-space-5:  20px;
+  --pc-space-6:  24px;
+  --pc-space-8:  32px;
+  --pc-space-10: 40px;
+  --pc-space-12: 48px;
+
+  /* ---- Elevation ----------------------------------------- */
+  --pc-shadow-sm: 0 1px 3px rgba(17,18,18,0.07), 0 1px 2px rgba(17,18,18,0.04);
+  --pc-shadow-md: 0 4px 16px rgba(17,18,18,0.09), 0 2px 6px rgba(17,18,18,0.05);
+  --pc-shadow-lg: 0 20px 45px rgba(17,18,18,0.13);
+  --pc-glow-accent: 0 6px 20px rgba(17,18,18,0.28);
+
+  /* ---- Animation ----------------------------------------- */
+  --pc-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pc-ease-out:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --pc-duration-fast: 150ms;
+  --pc-duration-base: 220ms;
+  --pc-duration-slow: 350ms;
+
+  /* ---- Sidebar dimensions -------------------------------- */
+  --sidebar-w:         256px;
+  --sidebar-w-compact: 68px;
+
+  /* ---- Focus -------------------------------------------- */
+  --pc-focus: 0 0 0 3px rgba(17,18,18,0.20), 0 0 0 5px var(--pc-ink);
+}
+
+/* ──────────────────────────────────────────────────────────
+   BASE RESET
+   ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--pc-font-sans);
+  font-size: var(--pc-text-base);
+  line-height: var(--pc-leading-normal);
+  background: var(--pc-bg);
+  color: var(--pc-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+h1 { font-size: var(--pc-text-2xl); }
+h2 { font-size: var(--pc-text-xl); }
+h3 { font-size: var(--pc-text-lg); }
+h1, h2, h3, h4 {
+  font-family: var(--pc-font-display);
+  letter-spacing: -0.02em;
+  line-height: var(--pc-leading-tight);
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; }
+img, svg { display: block; }
+
+/* ──────────────────────────────────────────────────────────
+   LIVELY PAGE ANIMATIONS
+   ────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Apply entrance animation to page main content */
+.pc-page-enter {
+  animation: fadeUp var(--pc-duration-slow) var(--pc-ease-out) both;
+}
+
+.pc-page-enter-delay {
+  animation: fadeUp var(--pc-duration-slow) var(--pc-ease-out) 80ms both;
+}
+
+/* Card hover lift */
+.pc-card-hover {
+  transition: box-shadow var(--pc-duration-base) var(--pc-ease-out),
+              transform var(--pc-duration-base) var(--pc-ease-out);
+}
+.pc-card-hover:hover {
+  box-shadow: var(--pc-shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ──────────────────────────────────────────────────────────
+   LOADING SKELETON SHIMMER
+   ────────────────────────────────────────────────────────── */
+.pc-skeleton {
+  background: linear-gradient(90deg,
+    var(--pc-surface-2) 25%,
+    var(--pc-surface-3) 50%,
+    var(--pc-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: var(--pc-radius-md);
+}
+
+/* ──────────────────────────────────────────────────────────
+   SIDEBAR / APP SHELL
+   ────────────────────────────────────────────────────────── */
+
+/* Sidebar open/close state driven by data-sidebar attr on wrapper */
+.pc-shell { display: flex; min-height: 100vh; background: var(--pc-bg); }
+
+.pc-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--pc-surface-1);
+  border-right: 1px solid var(--pc-border);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 14px;
+  transition: width var(--pc-duration-slow) var(--pc-ease-out),
+              padding var(--pc-duration-slow) var(--pc-ease-out);
+  overflow: hidden;
+  position: relative;
+  z-index: 200;
+}
+
+/* Compact (icon-only) mode */
+.pc-sidebar.compact {
+  width: var(--sidebar-w-compact);
+  padding: 22px 10px;
+}
+
+.pc-sidebar.compact .pc-brand-label,
+.pc-sidebar.compact .pc-nav-label,
+.pc-sidebar.compact .pc-user-text,
+.pc-sidebar.compact .pc-nav-badge {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pc-sidebar.compact nav a {
+  justify-content: center;
+  padding: 13px 10px;
+}
+
+.pc-sidebar.compact .pc-user-card {
+  justify-content: center;
+  padding: 10px;
+}
+
+/* Sidebar collapse button — icon-only, standard pattern (Notion / Linear style) */
+.pc-sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pc-radius-lg);
+  border: none;
+  background: transparent;
+  color: var(--pc-text-dim);
+  cursor: pointer;
+  transition: background var(--pc-duration-fast), color var(--pc-duration-fast);
+  flex-shrink: 0;
+}
+
+.pc-sidebar-collapse-btn:hover {
+  background: var(--pc-surface-2);
+  color: var(--pc-text);
+}
+
+.pc-sidebar-collapse-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--pc-duration-base) var(--pc-ease-out);
+}
+
+.pc-sidebar-collapse-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.pc-sidebar-collapse-label {
+  transition: opacity var(--pc-duration-base), max-width var(--pc-duration-slow);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Sidebar divider */
+.pc-sidebar-divider {
+  height: 1px;
+  background: var(--pc-border);
+  margin: 4px 0;
+}
+
+/* Hide the collapse button text in compact mode */
+.pc-sidebar.compact .pc-sidebar-collapse-btn {
+  justify-content: center;
+  padding: 10px;
+}
+
+/* Brand logo */
+.pc-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 8px 28px;
+  white-space: nowrap;
+  transition: padding var(--pc-duration-slow) var(--pc-ease-out);
+}
+
+.pc-brand-label {
+  font-size: var(--pc-text-lg);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-family: var(--pc-font-display);
+  transition: opacity var(--pc-duration-base), width var(--pc-duration-slow);
+  white-space: nowrap;
+}
+
+/* Nav links */
+.pc-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 13px;
+  border-radius: var(--pc-radius-lg);
+  font-size: var(--pc-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--pc-text-muted);
+  transition:
+    background var(--pc-duration-fast),
+    color var(--pc-duration-fast),
+    transform var(--pc-duration-fast),
+    box-shadow var(--pc-duration-base);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pc-nav-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--pc-accent);
+  opacity: 0;
+  transition: opacity var(--pc-duration-fast);
+  border-radius: inherit;
+}
+
+.pc-nav-link:hover {
+  background: var(--pc-surface-2);
+  color: var(--pc-text);
+  transform: translateX(2px);
+}
+
+.pc-nav-link.active {
+  background: var(--pc-accent);
+  color: var(--pc-on-accent);
+  box-shadow: 0 4px 12px rgba(17,18,18,0.22);
+}
+
+.pc-nav-link.active:hover {
+  transform: translateX(0);
+  background: var(--pc-accent-strong);
+}
+
+.pc-nav-label {
+  transition: opacity var(--pc-duration-base) var(--pc-ease-out),
+              max-width var(--pc-duration-slow) var(--pc-ease-out);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pc-nav-icon {
+  flex-shrink: 0;
+  transition: transform var(--pc-duration-base) var(--pc-ease-spring);
+}
+
+.pc-nav-link:hover .pc-nav-icon {
+  transform: scale(1.12);
+}
+
+.pc-nav-link.active .pc-nav-icon {
+  transform: scale(1.05);
+}
+
+/* User card at bottom */
+.pc-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--pc-radius-xl);
+  background: var(--pc-surface-2);
+  border: 1px solid var(--pc-border);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--pc-duration-fast), border-color var(--pc-duration-fast);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pc-user-card:hover {
+  background: var(--pc-surface-3);
+  border-color: var(--pc-border-strong);
+}
+
+.pc-user-text {
+  min-width: 0;
+  transition: opacity var(--pc-duration-base) var(--pc-ease-out),
+              max-width var(--pc-duration-slow) var(--pc-ease-out);
+  overflow: hidden;
+}
+
+.pc-sign-out-btn {
+  border: none;
+  background: transparent;
+  color: var(--pc-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pc-text-xs);
+  font-weight: 600;
+  text-align: left;
+  padding: 4px 8px;
+  border-radius: var(--pc-radius-md);
+  transition: color var(--pc-duration-fast), background var(--pc-duration-fast);
+}
+
+.pc-sign-out-btn:hover {
+  color: var(--pc-danger);
+  background: var(--pc-danger-bg);
+}
+
+/* Main content */
+.pc-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ──────────────────────────────────────────────────────────
+   PAGE HEADER
+   ────────────────────────────────────────────────────────── */
+.pc-page-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: clamp(14px, 3vw, 22px) clamp(16px, 4vw, 36px);
+  border-bottom: 1px solid var(--pc-border);
+  background: var(--pc-surface-1);
+  animation: fadeIn var(--pc-duration-slow) both;
+}
+
+.pc-page-header h1 {
+  margin: 0;
+  font-size: var(--pc-text-xl);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.pc-page-header p {
+  margin: 4px 0 0;
+  font-size: var(--pc-text-sm);
+  color: var(--pc-text-muted);
+}
+
+/* ──────────────────────────────────────────────────────────
+   PAGE CONTENT AREA
+   ────────────────────────────────────────────────────────── */
+.pc-page-body {
+  flex: 1;
+  padding: clamp(16px, 3.5vw, 32px) clamp(16px, 4vw, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 3vw, 28px);
+  overflow: auto;
+}
+
+/* ──────────────────────────────────────────────────────────
+   LAYOUT GRIDS
+   ────────────────────────────────────────────────────────── */
+.pc-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(10px, 2vw, 18px);
+}
+
+.pc-two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: clamp(14px, 2.5vw, 28px);
+  align-items: start;
+}
+
+.pc-activations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: clamp(10px, 2vw, 16px);
+}
+
+.pc-number-row       { display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; }
+.pc-number-row-meta  { flex: 1; min-width: 160px; }
+.pc-number-row-tail  { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+
+.pc-topbar-search { display: flex; }
+
+/* ──────────────────────────────────────────────────────────
+   MOBILE OVERLAY
+   ────────────────────────────────────────────────────────── */
+.pc-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 190;
+  animation: fadeIn 200ms ease both;
+}
+
+.pc-overlay.visible { display: block; }
+
+/* ──────────────────────────────────────────────────────────
+   HAMBURGER (mobile)
+   ────────────────────────────────────────────────────────── */
+.pc-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pc-radius-md);
+  border: 1px solid var(--pc-border-strong);
+  background: var(--pc-surface-1);
+  color: var(--pc-text);
+  transition: background var(--pc-duration-fast);
+}
+
+.pc-hamburger:hover { background: var(--pc-surface-2); }
+
+/* ──────────────────────────────────────────────────────────
+   STAT CARD ANIMATION
+   ────────────────────────────────────────────────────────── */
+.pc-stat-card {
+  animation: scaleIn var(--pc-duration-slow) var(--pc-ease-spring) both;
+  transition: box-shadow var(--pc-duration-base), transform var(--pc-duration-base);
+}
+.pc-stat-card:nth-child(1) { animation-delay: 0ms;   }
+.pc-stat-card:nth-child(2) { animation-delay: 60ms;  }
+.pc-stat-card:nth-child(3) { animation-delay: 120ms; }
+.pc-stat-card:nth-child(4) { animation-delay: 180ms; }
+
+.pc-stat-card:hover {
+  box-shadow: var(--pc-shadow-md);
+  transform: translateY(-2px);
+}
+
+/* ──────────────────────────────────────────────────────────
+   INTERACTIVE BUTTON / LINK EFFECTS
+   ────────────────────────────────────────────────────────── */
+.pc-btn {
+  position: relative;
+  overflow: hidden;
+  transition:
+    background var(--pc-duration-fast),
+    box-shadow var(--pc-duration-base),
+    transform var(--pc-duration-fast);
+}
+
+.pc-btn:active { transform: scale(0.97); }
+
+/* Ripple on click */
+.pc-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.25) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.pc-btn:active::after { opacity: 1; }
+
+/* ──────────────────────────────────────────────────────────
+   TRANSACTION ROW ANIMATION
+   ────────────────────────────────────────────────────────── */
+.pc-txn-row {
+  animation: slide-in-right var(--pc-duration-base) var(--pc-ease-out) both;
+  transition: background var(--pc-duration-fast);
+}
+.pc-txn-row:hover { background: var(--pc-surface-2); border-radius: var(--pc-radius-md); }
+
+/* ──────────────────────────────────────────────────────────
+   WALLET CARD ENHANCEMENT
+   ────────────────────────────────────────────────────────── */
+.pc-wallet-card {
+  animation: fadeUp var(--pc-duration-slow) var(--pc-ease-out) both;
+}
+
+/* Live pulse indicator */
+.pc-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pc-success);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* ──────────────────────────────────────────────────────────
+   INPUT / FIELD FOCUS
+   ────────────────────────────────────────────────────────── */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--pc-focus);
+}
+
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE BREAKPOINTS
+   ────────────────────────────────────────────────────────── */
+
+/* --- ≤1100px: compact sidebar -------------------------------- */
+@media (max-width: 1100px) {
+  .pc-stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* --- ≤900px: icon sidebar ------------------------------------ */
+@media (max-width: 900px) {
+  .pc-sidebar {
+    width: var(--sidebar-w-compact);
+    padding: 22px 10px;
+  }
+
+  .pc-sidebar .pc-brand-label,
+  .pc-sidebar .pc-nav-label,
+  .pc-sidebar .pc-user-text,
+  .pc-sidebar .pc-nav-badge {
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+  }
+
+  .pc-sidebar nav a { justify-content: center; }
+  .pc-sidebar .pc-user-card { justify-content: center; }
+  .pc-sidebar-toggle { display: none; }
+
+  .pc-two-col { grid-template-columns: 1fr; }
+}
+
+/* --- ≤720px: mobile layout (drawer sidebar) ------------------ */
+@media (max-width: 720px) {
+  .pc-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-w) !important;
+    padding: 22px 14px !important;
+    transform: translateX(-110%);
+    transition: transform var(--pc-duration-slow) var(--pc-ease-out);
+    box-shadow: var(--pc-shadow-lg);
+    z-index: 300;
+  }
+
+  .pc-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .pc-sidebar .pc-brand-label,
+  .pc-sidebar .pc-nav-label,
+  .pc-sidebar .pc-user-text {
+    opacity: 1 !important;
+    max-width: 200px !important;
+    overflow: visible !important;
+  }
+
+  .pc-sidebar nav a { justify-content: flex-start !important; }
+  .pc-sidebar .pc-user-card { justify-content: flex-start !important; }
+
+  .pc-hamburger { display: flex; }
+  .pc-topbar-search { display: none; }
+
+  .pc-page-header {
+    padding: 14px 16px;
+  }
+
+  .pc-page-body {
+    padding: 16px;
+  }
+
+  .pc-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .pc-activations-grid { grid-template-columns: 1fr; }
+
+  .pc-shell { display: block; }
+  .pc-main { min-height: 100vh; }
+}
+
+/* --- ≤560px: small phones ------------------------------------ */
+@media (max-width: 560px) {
+  .pc-number-row { flex-wrap: wrap; }
+  .pc-number-row-tail { margin-left: 0; width: 100%; justify-content: space-between; }
+  .pc-stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
+/* --- ≤420px: very small phones ------------------------------ */
+@media (max-width: 420px) {
+  .pc-stat-grid { grid-template-columns: 1fr; }
+  .pc-page-header h1 { font-size: var(--pc-text-lg); }
+}
+
+/* ──────────────────────────────────────────────────────────
+   PLACEHOLDER STATES (animated)
+   ────────────────────────────────────────────────────────── */
+.pc-empty-state {
+  border: 1.5px dashed var(--pc-border-strong);
+  border-radius: var(--pc-radius-xl);
+  padding: clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px);
+  text-align: center;
+  color: var(--pc-text-muted);
+  animation: fadeIn var(--pc-duration-slow) both;
+  background: var(--pc-surface-1);
+  transition: border-color var(--pc-duration-base), background var(--pc-duration-base);
+}
+
+.pc-empty-state:hover {
+  border-color: var(--pc-accent);
+  background: var(--pc-surface-2);
+}
+
+.pc-empty-state-title {
+  font-size: var(--pc-text-base);
+  font-weight: 700;
+  color: var(--pc-text);
+  margin-bottom: 6px;
+}
+
+.pc-empty-state-body {
+  font-size: var(--pc-text-sm);
+  line-height: 1.6;
+}
+
+/* ──────────────────────────────────────────────────────────
+   BADGES — animated dot
+   ────────────────────────────────────────────────────────── */
+.pc-badge-active::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 5px;
+  animation: pulse-dot 1.8s infinite;
+  vertical-align: middle;
+}
+
+/* ──────────────────────────────────────────────────────────
+   SCROLLBAR & ADDITIONAL UTILITIES
+   ────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--pc-border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--pc-text-dim); }
+
+/* Premium custom dropdown styling */
+.pc-select {
+  height: 46px;
+  width: 100%;
+  border-radius: var(--pc-radius-md);
+  border: 1px solid var(--pc-border-strong);
+  background: var(--pc-surface-1);
+  color: var(--pc-text);
+  font-size: 15px;
+  font-family: inherit;
+  padding: 0 36px 0 14px;
+  cursor: pointer;
+  transition: border-color var(--pc-duration-fast), box-shadow var(--pc-duration-fast), background var(--pc-duration-fast);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 15px;
+}
+.pc-select:focus-visible {
+  border-color: var(--pc-accent);
+  box-shadow: var(--pc-focus);
+}
+.pc-select:hover {
+  background-color: var(--pc-surface-2);
+}
+
+/* Two-column layout that folds cleanly on small viewports */
+.pc-grid-two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 28px);
+  align-items: start;
+  max-width: 100%;
+}
+@media (max-width: 768px) {
+  .pc-grid-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Premium Filter Chip buttons */
+.pc-chip {
+  padding: 8px 16px;
+  border-radius: var(--pc-radius-full);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pc-text-sm);
+  font-weight: 600;
+  border: 1.5px solid var(--pc-border-strong);
+  background: var(--pc-surface-1);
+  color: var(--pc-text-muted);
+  transition: all var(--pc-duration-fast) var(--pc-ease-out);
+}
+.pc-chip:hover {
+  border-color: var(--pc-accent);
+  color: var(--pc-text);
+  background: var(--pc-surface-2);
+}
+.pc-chip.active {
+  border-color: var(--pc-accent);
+  background: var(--pc-accent);
+  color: var(--pc-on-accent);
+  box-shadow: var(--pc-shadow-sm);
+}
+
+/* Responsive grid for catalog lists */
+.pc-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
