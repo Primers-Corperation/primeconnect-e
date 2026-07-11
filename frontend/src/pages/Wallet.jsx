@@ -5,7 +5,7 @@ import { WalletCard } from '../components/WalletCard/WalletCard.jsx';
 import { TextField } from '../components/TextField/TextField.jsx';
 import { Button } from '../components/Button/Button.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { getBalance, initializeTopup } from '../api/wallet.js';
+import { getBalance, initializeTopup, quoteTopup } from '../api/wallet.js';
 import { getBanks, resolveAccount, submitWithdrawal } from '../api/withdrawal.js';
 
 const PRESETS = [500, 1000, 2000, 5000];
@@ -19,6 +19,7 @@ export function Wallet() {
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [chargedAmount, setChargedAmount] = useState(null);
 
   const [banks, setBanks] = useState([]);
   const [bankCode, setBankCode] = useState('');
@@ -48,6 +49,19 @@ export function Wallet() {
       getBanks().then(setBanks).catch(() => {});
     }
   }, [mode]);
+
+  useEffect(() => {
+    const value = Number(amount);
+    if (!value || value < 100) {
+      setChargedAmount(null);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(() => {
+      quoteTopup(value).then((v) => { if (!cancelled) setChargedAmount(v); }).catch(() => { if (!cancelled) setChargedAmount(null); });
+    }, 350);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [amount]);
 
   const handleTopUp = async (e) => {
     e.preventDefault();
@@ -193,6 +207,11 @@ export function Wallet() {
                 ))}
               </div>
               <TextField label="Amount (₦)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1000" min="100" />
+              {chargedAmount != null ? (
+                <div style={{ fontSize: 13, color: 'var(--pc-text-muted)' }}>
+                  You'll be charged <strong>₦{chargedAmount.toLocaleString('en-NG')}</strong> on Paystack (covers processing fees) — ₦{Number(amount).toLocaleString('en-NG')} lands in your wallet.
+                </div>
+              ) : null}
               {error ? <div style={{ fontSize: 13, color: 'var(--pc-danger)' }}>{error}</div> : null}
               <Button type="submit" full disabled={loading}>{loading ? 'Redirecting…' : 'Top up with Paystack'}</Button>
             </form>

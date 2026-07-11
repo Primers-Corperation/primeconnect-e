@@ -14,7 +14,13 @@ export async function getBalance(userId) {
 // Start a Paystack top-up; returns the hosted-checkout URL to redirect to.
 export async function initializeTopup(amount) {
   const { data } = await client.post('/api/wallet/paystack/initialize', { amount });
-  return data; // { status, authorization_url, reference }
+  return data; // { status, authorization_url, reference, amount, chargedAmount }
+}
+
+// Preview the fee cushion for a desired wallet credit before committing.
+export async function quoteTopup(amount) {
+  const { data } = await client.get('/api/wallet/paystack/quote', { params: { amount } });
+  return data.chargedAmount;
 }
 
 // Verify a top-up after returning from Paystack checkout.
