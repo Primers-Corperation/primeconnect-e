@@ -6,6 +6,7 @@ import Withdrawal from '../models/Withdrawal.js';
 import Wallet from '../models/Wallet.js';
 import User from '../models/User.js';
 import { initializeTransaction, verifyTransaction } from '../lib/paystack.js';
+import { computeTopupCharge } from '../lib/fees.js';
 import { validateRequest, paystackInitSchema } from '../middleware/validation.js';
 
 // Idempotently credit a wallet for a successful Paystack charge.
@@ -22,8 +23,10 @@ async function creditIfPending(reference, paystackAmountKobo, channel) {
   );
   if (!payment) return null; // already processed or unknown reference
 
-  // Defensive: Paystack's charged amount (kobo) must match what we recorded.
-  if (paystackAmountKobo != null && Math.round(payment.amount * 100) !== paystackAmountKobo) {
+  // Defensive: Paystack's charged amount (kobo) must match what we billed
+  // them for (the wallet credit plus the fee cushion), not the wallet
+  // credit amount itself.
+  if (paystackAmountKobo != null && Math.round(payment.chargedAmount * 100) !== paystackAmountKobo) {
     payment.status = 'failed';
     await payment.save();
     return null;
@@ -69,25 +72,38 @@ async function resolveWithdrawal(reference, finalStatus) {
 // ---- Protected router (mounted under /api/wallet/paystack, requires JWT) ----
 const router = express.Router();
 
+// Preview the fee cushion for a desired wallet credit, before the user
+// commits — read-only, no Payment record created.
+router.get('/quote', (req, res) => {
+  const amount = Number(req.query.amount);
+  if (!Number.isFinite(amount) || amount < 100) {
+    return res.status(400).json({ status: 'error', message: 'Enter an amount of at least ₦100.' });
+  }
+  res.json({ status: 'success', amount, chargedAmount: computeTopupCharge(amount) });
+});
+
 // Start a top-up: create a pending Payment and hand back Paystack's checkout URL.
+// The user is charged more than `amount` (a fee cushion covering Paystack's
+// cut plus our margin) so that exactly `amount` lands in their wallet.
 router.post('/initialize', validateRequest(paystackInitSchema), async (req, res) => {
   try {
     const { amount } = req.body;
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
 
+    const chargedAmount = computeTopupCharge(amount);
     const reference = crypto.randomUUID();
-    await Payment.create({ userId: req.userId, reference, amount, status: 'pending' });
+    await Payment.create({ userId: req.userId, reference, amount, chargedAmount, status: 'pending' });
 
     const clientUrl = (process.env.CLIENT_URL || '').replace(/\/$/, '');
     const init = await initializeTransaction({
       email: user.email,
-      amountKobo: Math.round(amount * 100),
+      amountKobo: Math.round(chargedAmount * 100),
       reference,
       callbackUrl: clientUrl ? `${clientUrl}/wallet/callback` : undefined,
     });
 
-    res.json({ status: 'success', authorization_url: init.authorization_url, reference });
+    res.json({ status: 'success', authorization_url: init.authorization_url, reference, amount, chargedAmount });
   } catch (err) {
     console.error('Paystack initialize error:', err.response?.data || err.message);
     res.status(502).json({ status: 'error', message: 'Could not start payment. Please try again.' });
