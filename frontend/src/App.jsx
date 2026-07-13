@@ -1,17 +1,34 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx';
 import { ProtectedRoute } from './auth/ProtectedRoute.jsx';
-import { Login } from './pages/Login.jsx';
-import { Register } from './pages/Register.jsx';
-import { Dashboard } from './pages/Dashboard.jsx';
-import { Wallet } from './pages/Wallet.jsx';
-import { WalletCallback } from './pages/WalletCallback.jsx';
-import { RentNumber } from './pages/RentNumber.jsx';
-import { Marketplace } from './pages/Marketplace.jsx';
-import { History } from './pages/History.jsx';
-import { Settings } from './pages/Settings.jsx';
-import { Support } from './pages/Support.jsx';
+
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Register = lazy(() => import('./pages/Register.jsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const Wallet = lazy(() => import('./pages/Wallet.jsx'));
+const WalletCallback = lazy(() => import('./pages/WalletCallback.jsx'));
+const RentNumber = lazy(() => import('./pages/RentNumber.jsx'));
+const Marketplace = lazy(() => import('./pages/Marketplace.jsx'));
+const History = lazy(() => import('./pages/History.jsx'));
+const Settings = lazy(() => import('./pages/Settings.jsx'));
+const Support = lazy(() => import('./pages/Support.jsx'));
+
+function PageLoader() {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '60vh', padding: 32,
+    }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: '50%',
+        border: '3px solid var(--pc-surface-3, #eee)',
+        borderTopColor: 'var(--pc-accent, #111)',
+        animation: 'pc-spin 0.7s linear infinite',
+      }} />
+    </div>
+  );
+}
 
 function Root() {
   const { token } = useAuth();
@@ -21,20 +38,22 @@ function Root() {
 export function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Root />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/rent-number" element={<ProtectedRoute><RentNumber /></ProtectedRoute>} />
-        <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-        <Route path="/wallet/callback" element={<ProtectedRoute><WalletCallback /></ProtectedRoute>} />
-        <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Root />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/rent-number" element={<ProtectedRoute><RentNumber /></ProtectedRoute>} />
+          <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+          <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+          <Route path="/wallet/callback" element={<ProtectedRoute><WalletCallback /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }
