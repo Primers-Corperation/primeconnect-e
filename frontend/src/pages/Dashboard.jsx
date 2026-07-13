@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/AppShell.jsx';
 import { Button } from '../components/Button/Button.jsx';
@@ -62,30 +62,27 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [w, a] = await Promise.all([getWallet(), getActivations()]);
-        if (cancelled) return;
-        setWallet(w);
-        setActivations(a);
-      } catch (err) {
-        if (!cancelled) setError('Could not load your dashboard. Please refresh.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
+  const fetchData = useCallback(async () => {
+    try {
+      const [w, a] = await Promise.all([getWallet(), getActivations()]);
+      setWallet(w);
+      setActivations(a);
+    } catch (err) {
+      setError('Could not load your dashboard. Please refresh.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   useActivationPolling(activations, setActivations);
 
-  const handleCopy = (code) => {
+  const handleCopy = useCallback((code) => {
     if (code) navigator.clipboard?.writeText(code);
-  };
+  }, []);
 
-  const handleCancel = async (activation) => {
+  const handleCancel = useCallback(async (activation) => {
     try {
       await cancelActivation(activation._id);
       setActivations((prev) => prev.map((a) => (a._id === activation._id ? { ...a, status: 'cancelled' } : a)));
@@ -94,7 +91,7 @@ export function Dashboard() {
     } catch (err) {
       setError(err.response?.data?.message || 'Could not cancel this rental.');
     }
-  };
+  }, []);
 
   const firstName = (user?.name || 'there').trim().split(/\s+/)[0];
   const txns = wallet.transactions || [];
@@ -165,8 +162,8 @@ export function Dashboard() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
             <WalletCard
-              balance={loading ? 0 : wallet.balance}
-              footer={loading ? 'Loading balance…' : null}
+              balance={wallet.balance}
+              loading={loading}
               onTopUp={() => navigate('/wallet')}
               onWithdraw={() => navigate('/wallet')}
             />
