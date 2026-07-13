@@ -2,8 +2,13 @@ import client from './client.js';
 
 // The user's rented numbers (activations).
 export async function getActivations() {
-  const { data } = await client.get('/api/sms/activations');
-  return data.activations || [];
+  try {
+    const { data } = await client.get('/api/sms/activations');
+    return data.activations || [];
+  } catch (err) {
+    if (!err.response || err.response.status === 404) return [];
+    throw err;
+  }
 }
 
 // Rent a new number for a service/country via Grizzly.
