@@ -1,40 +1,28 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Avatar } from './Avatar/Avatar.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
 
 const NAV = [
-  {
-    to: '/dashboard',
-    label: 'Dashboard',
-    icon: 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z',
-  },
-  {
-    to: '/rent-number',
-    label: 'Rent number',
-    icon: 'M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013 5.18 2 2 0 015 3h3a2 2 0 012 1.72c.13 1 .37 2 .72 2.94a2 2 0 01-.45 2.11L8.09 11.9a16 16 0 006 6l1.13-1.18a2 2 0 012.11-.45c.94.35 1.94.59 2.94.72A2 2 0 0122 16.92z',
-  },
-  {
-    to: '/marketplace',
-    label: 'Marketplace',
-    icon: 'M2 7h20v14H2zM16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16',
-  },
-  {
-    to: '/wallet',
-    label: 'Wallet',
-    icon: 'M2 5h20v14H2zM2 10h20',
-  },
-  {
-    to: '/history',
-    label: 'History',
-    icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z',
-  },
-  {
-    to: '/support',
-    label: 'Help & support',
-    icon: 'M12 22a10 10 0 100-20 10 10 0 000 20zM9.09 9a3 3 0 015.83 1c0 2-3 2-3 4M12 17h.01',
-  },
+  { to: '/dashboard', label: 'Dashboard', icon: 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z' },
+  { to: '/rent-number', label: 'Rent number', icon: 'M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013 5.18 2 2 0 015 3h3a2 2 0 012 1.72c.13 1 .37 2 .72 2.94a2 2 0 01-.45 2.11L8.09 11.9a16 16 0 006 6l1.13-1.18a2 2 0 012.11-.45c.94.35 1.94.59 2.94.72A2 2 0 0122 16.92z' },
+  { to: '/marketplace', label: 'Marketplace', icon: 'M2 7h20v14H2zM16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16' },
+  { to: '/wallet', label: 'Wallet', icon: 'M2 5h20v14H2zM2 10h20' },
+  { to: '/history', label: 'History', icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z' },
+  { to: '/support', label: 'Help & support', icon: 'M12 22a10 10 0 100-20 10 10 0 000 20zM9.09 9a3 3 0 015.83 1c0 2-3 2-3 4M12 17h.01' },
 ];
+
+// Prefetch map: route → lazy import function
+const PREFETCH_MAP = {
+  '/dashboard': () => import('../pages/Dashboard.jsx'),
+  '/rent-number': () => import('../pages/RentNumber.jsx'),
+  '/marketplace': () => import('../pages/Marketplace.jsx'),
+  '/wallet': () => import('../pages/Wallet.jsx'),
+  '/history': () => import('../pages/History.jsx'),
+  '/support': () => import('../pages/Support.jsx'),
+};
+
+const prefetched = new Set();
 
 function NavIcon({ d }) {
   return (
@@ -47,6 +35,12 @@ function NavIcon({ d }) {
 export function AppShell({ children }) {
   const { user, logout } = useAuth();
   const location = useLocation();
+
+  const handlePrefetch = useCallback((to) => {
+    if (prefetched.has(to) || !PREFETCH_MAP[to]) return;
+    prefetched.add(to);
+    PREFETCH_MAP[to]();
+  }, []);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--pc-bg)', color: 'var(--pc-text)', fontFamily: 'var(--pc-font-sans)' }}>
@@ -69,6 +63,7 @@ export function AppShell({ children }) {
                 key={item.to}
                 to={item.to}
                 title={item.label}
+                onMouseEnter={() => handlePrefetch(item.to)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', borderRadius: 12,
                   background: active ? 'var(--pc-accent)' : 'transparent',
