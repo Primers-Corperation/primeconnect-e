@@ -14,7 +14,10 @@ const MIN_WITHDRAWAL = 1000;
 export function Wallet() {
   const { user } = useAuth();
   const [balance, setBalance] = useState(null);
-  const [mode, setMode] = useState('topup'); // 'topup' | 'withdraw'
+  const [balanceLoading, setBalanceLoading] = useState(true);
+  const [balanceError, setBalanceError] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [mode, setMode] = useState('topup');
 
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
@@ -32,13 +35,18 @@ export function Wallet() {
   const [withdrawSuccess, setWithdrawSuccess] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
 
-  const refreshBalance = async () => {
+  const refreshBalance = async (isRetry = false) => {
     if (!user?._id) return;
+    if (isRetry) setRetrying(true);
     try {
       const value = await getBalance(user._id);
       setBalance(value);
-    } catch (err) {
-      setBalance(err.response?.status === 404 ? 0 : null);
+      setBalanceError(false);
+    } catch {
+      setBalanceError(true);
+    } finally {
+      setBalanceLoading(false);
+      setRetrying(false);
     }
   };
 
@@ -52,10 +60,7 @@ export function Wallet() {
 
   useEffect(() => {
     const value = Number(amount);
-    if (!value || value < 100) {
-      setChargedAmount(null);
-      return;
-    }
+    if (!value || value < 100) { setChargedAmount(null); return; }
     let cancelled = false;
     const t = setTimeout(() => {
       quoteTopup(value).then((v) => { if (!cancelled) setChargedAmount(v); }).catch(() => { if (!cancelled) setChargedAmount(null); });
@@ -67,22 +72,14 @@ export function Wallet() {
     e.preventDefault();
     setError('');
     const value = Number(amount);
-    if (!value || value < 100) {
-      setError('Enter an amount of at least ₦100.');
-      return;
-    }
+    if (!value || value < 100) { setError('Enter an amount of at least ₦100.'); return; }
     setLoading(true);
     try {
       const { authorization_url } = await initializeTopup(value);
-      // Hand off to Paystack's hosted checkout.
       window.location.assign(authorization_url);
     } catch (err) {
       const errors = err.response?.data?.errors;
-      setError(
-        errors?.length
-          ? errors.map((x) => x.message).join(', ')
-          : err.response?.data?.message || 'Could not start payment. Please try again.'
-      );
+      setError(errors?.length ? errors.map((x) => x.message).join(', ') : err.response?.data?.message || 'Could not start payment. Please try again.');
       setLoading(false);
     }
   };
@@ -115,18 +112,9 @@ export function Wallet() {
     setWithdrawError('');
     setWithdrawSuccess('');
     const value = Number(withdrawAmount);
-    if (!isVerified) {
-      setWithdrawError('Verify the account before withdrawing.');
-      return;
-    }
-    if (!value || value < MIN_WITHDRAWAL) {
-      setWithdrawError(`Enter an amount of at least ₦${MIN_WITHDRAWAL.toLocaleString('en-NG')}.`);
-      return;
-    }
-    if (balance != null && value > balance) {
-      setWithdrawError('Amount exceeds your wallet balance.');
-      return;
-    }
+    if (!isVerified) { setWithdrawError('Verify the account before withdrawing.'); return; }
+    if (!value || value < MIN_WITHDRAWAL) { setWithdrawError(`Enter an amount of at least ₦${MIN_WITHDRAWAL.toLocaleString('en-NG')}.`); return; }
+    if (balance != null && value > balance) { setWithdrawError('Amount exceeds your wallet balance.'); return; }
     setWithdrawing(true);
     try {
       const result = await submitWithdrawal({ amount: value, accountNumber, bankCode });
@@ -154,7 +142,10 @@ export function Wallet() {
       <div style={{ flex: 1, padding: '28px 32px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 24, alignItems: 'start', maxWidth: 820 }}>
         <WalletCard
           balance={balance ?? 0}
-          footer={balance === null ? 'Could not load balance' : null}
+          loading={balanceLoading}
+          error={balanceError}
+          retrying={retrying}
+          onRetry={() => refreshBalance(true)}
           onTopUp={() => setMode('topup')}
           onWithdraw={() => setMode('withdraw')}
         />
@@ -222,12 +213,9 @@ export function Wallet() {
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--pc-text-muted)', marginBottom: 7 }}>Bank</span>
                 <select
+                  className="pc-select"
                   value={bankCode}
                   onChange={(e) => { setBankCode(e.target.value); setAccountName(''); setVerifiedFor(''); }}
-                  style={{
-                    width: '100%', height: 46, borderRadius: 'var(--pc-radius-md)', border: '1px solid var(--pc-border-strong)',
-                    background: 'var(--pc-surface-2)', color: 'var(--pc-text)', fontSize: 15, fontFamily: 'inherit', padding: '0 12px',
-                  }}
                 >
                   <option value="">Select your bank…</option>
                   {banks.map((b) => (
