@@ -1,9 +1,7 @@
 /* ============================================================
    PrimeConnect Design System — Global tokens & base
-   Mixd-inspired: accessibility-first, high-contrast black-on-
-   white, a bright yellow highlight accent, bold grotesque
-   display type and underlined links.
-   Consumed by the compiler as the token/@font-face source.
+   Accessibility-first, high-contrast black-on-white,
+   bold grotesque display type, underlined links.
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
@@ -14,19 +12,15 @@
   --pc-yellow-strong: #ffd400;
   --pc-ink:           #111111;
 
-  /* Brand accent — black. Primary fills (buttons, wallet hero, active nav)
-     are near-black with white text. */
-  --pc-accent:        #111111;                /* highlight + primary fills */
+  --pc-accent:        #111111;
   --pc-accent-strong: #000000;
-  --pc-accent-grad:   linear-gradient(135deg, #1c1c1c 0%, #000000 100%); /* @kind color */
-  --pc-on-accent:     #ffffff;                /* text/icons drawn on the accent */
+  --pc-accent-grad:   linear-gradient(135deg, #1c1c1c 0%, #000000 100%);
+  --pc-on-accent:     #ffffff;
 
-  /* Legacy accent-text aliases repurposed to safe ink so any
-     older reference stays high-contrast on white. */
   --pc-violet-300:    #111111;
   --pc-violet-400:    #111111;
 
-  /* ---- Semantic status (accessible on white) ------------- */
+  /* ---- Semantic status ----------------------------------- */
   --pc-success: #0b7a3b;
   --pc-success-bg: rgba(11,122,59,0.10);
   --pc-warning: #8a5300;
@@ -36,7 +30,7 @@
   --pc-info:    #0b5cad;
   --pc-info-bg: rgba(11,92,173,0.10);
 
-  /* ---- Neutral ramp (light, paper-first) ----------------- */
+  /* ---- Neutral ramp ------------------------------------- */
   --pc-bg:        #ffffff;
   --pc-bg-alt:    #f4f3f1;
   --pc-surface-1: #ffffff;
@@ -49,24 +43,24 @@
   --pc-text-muted:#505a5f;
   --pc-text-dim:  #6f777b;
 
-  /* ---- Typography ---------------------------------------- */
+  /* ---- Typography --------------------------------------- */
   --pc-font-display: 'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
   --pc-font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --pc-font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
 
-  --pc-text-xs:  12px;
-  --pc-text-sm:  14px;
-  --pc-text-base:16px;
-  --pc-text-lg:  18px;
-  --pc-text-xl:  22px;
-  --pc-text-2xl: 28px;
-  --pc-text-3xl: 36px;
-  --pc-text-4xl: 52px;
+  --pc-text-xs:  clamp(11px, 0.75rem, 12px);
+  --pc-text-sm:  clamp(13px, 0.875rem, 14px);
+  --pc-text-base: clamp(15px, 1rem, 16px);
+  --pc-text-lg:  clamp(16px, 1.125rem, 18px);
+  --pc-text-xl:  clamp(18px, 1.375rem, 22px);
+  --pc-text-2xl: clamp(22px, 1.75rem, 28px);
+  --pc-text-3xl: clamp(28px, 2.25rem, 36px);
+  --pc-text-4xl: clamp(36px, 3.25rem, 52px);
 
   --pc-leading-tight: 1.08;
   --pc-leading-normal: 1.5;
 
-  /* ---- Radius (squared, editorial) ----------------------- */
+  /* ---- Radius ------------------------------------------- */
   --pc-radius-sm: 4px;
   --pc-radius-md: 8px;
   --pc-radius-lg: 12px;
@@ -74,7 +68,7 @@
   --pc-radius-2xl: 20px;
   --pc-radius-full: 999px;
 
-  /* ---- Spacing (4pt) ------------------------------------- */
+  /* ---- Spacing (4pt) ------------------------------------ */
   --pc-space-1: 4px;
   --pc-space-2: 8px;
   --pc-space-3: 12px;
@@ -85,13 +79,13 @@
   --pc-space-10: 40px;
   --pc-space-12: 48px;
 
-  /* ---- Elevation (soft, on white) ------------------------ */
+  /* ---- Elevation ---------------------------------------- */
   --pc-shadow-sm: 0 1px 2px rgba(17,18,18,0.06);
   --pc-shadow-md: 0 6px 20px rgba(17,18,18,0.08);
   --pc-shadow-lg: 0 20px 45px rgba(17,18,18,0.12);
   --pc-glow-accent: 0 6px 20px rgba(17,18,18,0.28);
 
-  /* ---- Focus (accessibility-first, GOV.UK-style) --------- */
+  /* ---- Focus -------------------------------------------- */
   --pc-focus: 0 0 0 3px rgba(17,18,18,0.25), 0 0 0 5px var(--pc-ink);
 }
 
@@ -100,25 +94,247 @@
 body {
   margin: 0;
   font-family: var(--pc-font-sans);
+  font-size: var(--pc-text-base);
   background: var(--pc-bg);
   color: var(--pc-text);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Bold grotesque headings + underlined ink links, the Mixd way */
 h1, h2, h3 { font-family: var(--pc-font-display); letter-spacing: -0.02em; }
 
 /* ============================================================
-   Responsive layout — the Dashboard design ships at a single
-   1240px preview width; these rules keep the app shell and
-   dashboard grids usable below that.
+   Form controls — global reset
    ============================================================ */
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
+}
 
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.pc-select {
+  width: 100%;
+  height: 46px;
+  border-radius: var(--pc-radius-md);
+  border: 1px solid var(--pc-border-strong);
+  background: var(--pc-surface-2);
+  color: var(--pc-text);
+  font-size: 15px;
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.pc-textarea {
+  width: 100%;
+  border-radius: var(--pc-radius-md);
+  border: 1px solid var(--pc-border-strong);
+  background: var(--pc-surface-2);
+  color: var(--pc-text);
+  font-size: 15px;
+  padding: 12px;
+  resize: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================
+   CountrySelect dropdown
+   ============================================================ */
+.pc-country-select { position: relative; }
+.pc-country-select__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pc-text-muted);
+  margin-bottom: 7px;
+}
+.pc-country-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 46px;
+  padding: 0 12px;
+  border-radius: var(--pc-radius-md);
+  border: 1px solid var(--pc-border-strong);
+  background: var(--pc-surface-2);
+  color: var(--pc-text);
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.pc-country-select__trigger--open {
+  border-color: var(--pc-accent);
+}
+.pc-country-select__value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-country-select__flag { font-size: 18px; }
+.pc-country-select__chevron {
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: transform 0.2s;
+}
+.pc-country-select__trigger--open .pc-country-select__chevron {
+  transform: rotate(180deg);
+}
+.pc-country-select__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--pc-surface-1);
+  border: 1px solid var(--pc-border-strong);
+  border-radius: var(--pc-radius-lg);
+  box-shadow: var(--pc-shadow-lg);
+  animation: pc-dropdown-in 0.15s ease-out;
+  overflow: hidden;
+}
+@keyframes pc-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pc-country-select__search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pc-border);
+}
+.pc-country-select__search-icon { opacity: 0.5; flex-shrink: 0; }
+.pc-country-select__search {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--pc-text);
+  outline: none;
+}
+.pc-country-select__list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.pc-country-select__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.1s;
+}
+.pc-country-select__option--highlighted,
+.pc-country-select__option:hover {
+  background: var(--pc-surface-2);
+}
+.pc-country-select__option--selected {
+  font-weight: 700;
+}
+.pc-country-select__option-flag { font-size: 17px; }
+.pc-country-select__option-name { flex: 1; }
+.pc-country-select__option-dial {
+  font-size: 12px;
+  color: var(--pc-text-dim);
+  font-family: var(--pc-font-mono);
+}
+.pc-country-select__empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--pc-text-muted);
+  font-size: 13px;
+}
+
+/* ============================================================
+   WalletCard — premium animations
+   ============================================================ */
+.pc-wallet-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--pc-accent-grad);
+  border-radius: var(--pc-radius-2xl);
+  padding: 26px;
+  color: var(--pc-on-accent);
+  font-family: var(--pc-font-sans);
+  box-shadow: var(--pc-shadow-md);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.pc-wallet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--pc-shadow-lg);
+}
+.pc-wallet-card__orb {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pc-on-accent) 8%, transparent);
+  pointer-events: none;
+  animation: pc-orb-drift 6s ease-in-out infinite alternate;
+}
+@keyframes pc-orb-drift {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-10px, 10px); }
+}
+.pc-wallet-card--loading {
+  animation: pc-skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes pc-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.pc-wallet-card__fade-in {
+  animation: pc-fade-in 0.3s ease-out;
+}
+@keyframes pc-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   Utility: spin icon (for retry spinners)
+   ============================================================ */
+.pc-spin-icon {
+  animation: pc-spin 1s linear infinite;
+}
+@keyframes pc-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   Skeleton utility
+   ============================================================ */
+.pc-skeleton {
+  background: linear-gradient(90deg, var(--pc-surface-2) 25%, var(--pc-surface-3) 50%, var(--pc-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: pc-shimmer 1.5s infinite;
+}
+@keyframes pc-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================================
+   Responsive layout
+   ============================================================ */
 .pc-sidebar { width: 248px; }
 .pc-topbar-search { display: flex; }
-.pc-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.pc-two-col { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; align-items: start; }
-.pc-activations-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pc-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--pc-space-4); }
+.pc-two-col { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--pc-space-6); align-items: start; }
+.pc-activations-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--pc-space-4); }
 .pc-number-row { display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; }
 .pc-number-row-meta { flex: 1; min-width: 160px; }
 .pc-number-row-tail { display: flex; align-items: center; gap: 14px; margin-left: auto; }
@@ -145,4 +361,15 @@ h1, h2, h3 { font-family: var(--pc-font-display); letter-spacing: -0.02em; }
 
 @media (max-width: 420px) {
   .pc-stat-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
