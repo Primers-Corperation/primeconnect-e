@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { AppShell } from '../components/AppShell.jsx';
 import { Card } from '../components/Card/Card.jsx';
 import { Button } from '../components/Button/Button.jsx';
@@ -6,6 +6,7 @@ import { Badge } from '../components/Badge/Badge.jsx';
 import { TextField } from '../components/TextField/TextField.jsx';
 import { ServiceIcon } from '../components/ServiceIcon/ServiceIcon.jsx';
 import { NumberCard } from '../components/NumberCard/NumberCard.jsx';
+import { CountrySelect } from '../components/CountrySelect/CountrySelect.jsx';
 import { getCatalog, rentNumber, getSupportedCountries, getActivationStatus, cancelActivation } from '../api/sms.js';
 
 function naira(n) {
@@ -27,7 +28,7 @@ const RANGES = [
 
 export function RentNumber() {
   const [countries, setCountries] = useState([]);
-  const [country, setCountry] = useState('19'); // Nigeria default
+  const [country, setCountry] = useState('118'); // Nigeria
   const [search, setSearch] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,22 +38,27 @@ export function RentNumber() {
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const abortRef = useRef(null);
 
   useEffect(() => {
     getSupportedCountries().then(setCountries).catch(() => {});
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
     setLoading(true);
     setLoadError('');
+    // Abort previous request
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     const handle = setTimeout(() => {
       getCatalog({ country, minPrice: range.min, maxPrice: range.max, search })
-        .then((list) => { if (!cancelled) setItems(list); })
-        .catch(() => { if (!cancelled) setLoadError('Could not load the catalog. Please try again.'); })
-        .finally(() => { if (!cancelled) setLoading(false); });
-    }, search ? 300 : 0); // small debounce while typing a search term
-    return () => { cancelled = true; clearTimeout(handle); };
+        .then((list) => { if (!controller.signal.aborted) setItems(list); })
+        .catch(() => { if (!controller.signal.aborted) setLoadError('Could not load the catalog. Please try again.'); })
+        .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    }, search ? 300 : 0);
+    return () => { controller.abort(); clearTimeout(handle); };
   }, [country, range, search]);
 
   // Poll the just-rented number for its real status/OTP code.
@@ -62,14 +68,12 @@ export function RentNumber() {
       try {
         const updated = await getActivationStatus(result._id);
         setResult((prev) => (prev ? { ...prev, ...updated } : prev));
-      } catch {
-        // transient error — retry next tick
-      }
+      } catch { /* retry next tick */ }
     }, 8000);
     return () => clearInterval(interval);
   }, [result?._id, result?.status]);
 
-  const handleRent = async (item) => {
+  const handleRent = useCallback(async (item) => {
     setError('');
     setResult(null);
     setRenting(item.service);
@@ -81,13 +85,13 @@ export function RentNumber() {
     } finally {
       setRenting(null);
     }
-  };
+  }, [country]);
 
-  const handleCopy = (code) => {
+  const handleCopy = useCallback((code) => {
     if (code) navigator.clipboard?.writeText(code);
-  };
+  }, []);
 
-  const handleCancel = async () => {
+  const handleCancel = useCallback(async () => {
     if (!result || cancelling) return;
     setError('');
     setCancelling(true);
@@ -99,7 +103,7 @@ export function RentNumber() {
     } finally {
       setCancelling(false);
     }
-  };
+  }, [result, cancelling]);
 
   return (
     <AppShell>
@@ -113,20 +117,12 @@ export function RentNumber() {
           <div style={{ minWidth: 200 }}>
             <TextField label="Search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="e.g. WhatsApp, Netflix…" />
           </div>
-          <div>
-            <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--pc-text-muted)', marginBottom: 7 }}>Country</span>
-            <select
+          <div style={{ minWidth: 220 }}>
+            <CountrySelect
+              countries={countries}
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              style={{
-                height: 46, borderRadius: 'var(--pc-radius-md)', border: '1px solid var(--pc-border-strong)',
-                background: 'var(--pc-surface-2)', color: 'var(--pc-text)', fontSize: 15, fontFamily: 'inherit', padding: '0 12px',
-              }}
-            >
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            />
           </div>
         </div>
 
