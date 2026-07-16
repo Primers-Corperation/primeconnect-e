@@ -1,3 +1,8 @@
 node_modules
 .env
 dist
+
+# Binaries / archives that should never be committed
+*.exe
+*.zip
+bin/
