@@ -11,6 +11,13 @@ import { validateRequest, registerSchema, loginSchema, profileUpdateSchema } fro
 dotenv.config();
 const router = express.Router();
 
+// Never return the password hash to clients.
+function publicUser(user) {
+  const obj = user.toObject();
+  delete obj.password;
+  return obj;
+}
+
 // Register
 router.post('/register', authLimiter, validateRequest(registerSchema), async (req, res) => {
   const { name, email, password } = req.body;
@@ -18,7 +25,7 @@ router.post('/register', authLimiter, validateRequest(registerSchema), async (re
   try {
     const user = await User.create({ name, email, password: hashed });
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ status: 'success', token, user });
+    res.json({ status: 'success', token, user: publicUser(user) });
   } catch (err) {
     // Only a duplicate-key error means the email is taken; anything else
     // (e.g. the DB being unreachable) must not be reported as such.
@@ -35,11 +42,16 @@ router.post('/login', authLimiter, validateRequest(loginSchema), async (req, res
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ status: 'error', message: 'User not found' });
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ status: 'error', message: 'Incorrect password' });
+    // Always run a bcrypt comparison and return one generic message so the
+    // response time and body never reveal whether the email is registered.
+    const match = user
+      ? await bcrypt.compare(password, user.password)
+      : await bcrypt.compare(password, '$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinv');
+    if (!user || !match) {
+      return res.status(401).json({ status: 'error', message: 'Invalid email or password' });
+    }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ status: 'success', token, user });
+    res.json({ status: 'success', token, user: publicUser(user) });
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
