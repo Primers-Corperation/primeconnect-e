@@ -16,3 +16,15 @@ export async function updateProfile(payload) {
   const { data } = await client.put('/api/auth/me', payload);
   return data.user;
 }
+
+// Request a password reset email. Always resolves with a generic message.
+export async function forgotPassword(email) {
+  const { data } = await client.post('/api/auth/forgot-password', { email });
+  return data;
+}
+
+// Complete a password reset with the token from the emailed link.
+export async function resetPassword(token, password) {
+  const { data } = await client.post('/api/auth/reset-password', { token, password });
+  return data;
+}
