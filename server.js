@@ -33,6 +33,9 @@ app.use(generalLimiter);
 if (!process.env.MONGO_URI) {
   console.error('MONGO_URI is not set — database-backed routes will fail until it is configured');
 }
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is not set — authentication (register/login/JWT verification) will fail until it is configured');
+}
 if (!process.env.PAYSTACK_SECRET_KEY) {
   console.warn('PAYSTACK_SECRET_KEY is not set — wallet top-ups will fail until it is configured');
 }
@@ -80,8 +83,8 @@ app.use('/api/wallet', verifyToken, walletRoutes);
 app.use('/api/accounts', verifyToken, accountsRoutes);
 app.use('/api/support', verifyToken, supportRoutes);
 
+// Global error handler (must be registered after all routes, before listen)
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`PrimeConnect backend running on port ${PORT}`));
-
-// Global error handler (must be last)
-app.use(errorHandler);
