@@ -38,6 +38,9 @@ export function Login() {
           {error ? <div style={{ fontSize: 13, color: 'var(--pc-danger)' }}>{error}</div> : null}
           <Button type="submit" full disabled={loading}>{loading ? 'Signing in…' : 'Sign in'}</Button>
         </form>
+        <p style={{ marginTop: 14, fontSize: 13, textAlign: 'right' }}>
+          <Link to="/forgot-password" style={{ color: 'var(--pc-text-muted)' }}>Forgot password?</Link>
+        </p>
         <p style={{ marginTop: 20, fontSize: 13.5, color: 'var(--pc-text-muted)' }}>
           Don't have an account? <Link to="/register" style={{ color: 'var(--pc-text)' }}>Create one</Link>
         </p>
