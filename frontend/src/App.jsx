@@ -5,6 +5,8 @@ import { ProtectedRoute } from './auth/ProtectedRoute.jsx';
 
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const Wallet = lazy(() => import('./pages/Wallet.jsx'));
 const WalletCallback = lazy(() => import('./pages/WalletCallback.jsx'));
@@ -43,6 +45,8 @@ export function App() {
           <Route path="/" element={<Root />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/rent-number" element={<ProtectedRoute><RentNumber /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
