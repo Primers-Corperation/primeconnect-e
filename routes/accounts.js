@@ -27,18 +27,40 @@ router.post('/purchase', validateRequest(accountPurchaseSchema), async (req, res
     const account = await Account.findById(accountId);
     if (!account || account.status !== 'available') return res.status(404).json({ status: 'error', message: 'Account not available' });
 
-    const wallet = await Wallet.findOne({ userId });
-    if (!wallet || wallet.balance < account.price) return res.status(400).json({ status: 'error', message: 'Insufficient balance' });
+    // Atomically deduct only when the balance is sufficient. Without the
+    // conditional update, two concurrent purchases could both pass a separate
+    // balance check and overdraw the wallet.
+    const wallet = await Wallet.findOneAndUpdate(
+      { userId, balance: { $gte: account.price } },
+      {
+        $inc: { balance: -account.price },
+        $push: { transactions: { type: 'purchase', amount: -account.price, description: `Purchased account ${account.service}` } },
+      },
+      { new: true }
+    );
+    if (!wallet) return res.status(400).json({ status: 'error', message: 'Insufficient balance' });
 
-    wallet.balance -= account.price;
-    wallet.transactions.push({ type: 'purchase', amount: -account.price, description: `Purchased account ${account.service}` });
-    await wallet.save();
+    // Atomically claim the account; only succeeds while it is still available,
+    // preventing two buyers from purchasing the same account.
+    const claimed = await Account.findOneAndUpdate(
+      { _id: accountId, status: 'available' },
+      { $set: { status: 'sold', userId } },
+      { new: true }
+    );
 
-    account.status = 'sold';
-    account.userId = userId;
-    await account.save();
+    if (!claimed) {
+      // Lost the race for the account after debiting — refund the wallet.
+      await Wallet.updateOne(
+        { userId },
+        {
+          $inc: { balance: account.price },
+          $push: { transactions: { type: 'deposit', amount: account.price, description: `Refund: account ${account.service} no longer available` } },
+        }
+      );
+      return res.status(409).json({ status: 'error', message: 'Account no longer available' });
+    }
 
-    res.json({ status: 'success', account });
+    res.json({ status: 'success', account: claimed });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Server error' });
   }
