@@ -31,6 +31,15 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email'),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
 export const profileUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   email: z.string().email('Invalid email').optional(),
@@ -59,7 +68,7 @@ export const accountPurchaseSchema = z.object({
 });
 
 export const smsSendSchema = z.object({
-  phone: z.string().regex(/^234\d{9}$/, 'Phone number must be a valid Nigerian number (e.g., 2348012345678)'),
+  phone: z.string().regex(/^234\d{10}$/, 'Phone number must be a valid Nigerian number (e.g., 2348012345678)'),
   message: z.string().min(1, 'Message is required').max(160, 'Message cannot exceed 160 characters'),
 });
 
