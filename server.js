@@ -42,8 +42,8 @@ if (!process.env.PAYSTACK_SECRET_KEY) {
 if (!process.env.CLIENT_URL) {
   console.warn('CLIENT_URL is not set — Paystack callback will fall back to the dashboard default');
 }
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  console.warn('EMAIL_USER/EMAIL_PASS are not set — support reports will fail until they are configured');
+if (!process.env.RESEND_API_KEY) {
+  console.warn('RESEND_API_KEY is not set — password-reset and support emails will not be sent until it is configured');
 }
 
 app.get("/", (req, res) => {

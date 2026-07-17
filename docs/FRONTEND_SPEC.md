@@ -99,6 +99,7 @@ The `user` object never includes the password hash.
 
 ## Env
 
-- Backend: `MONGO_URI`, `JWT_SECRET`, `FRONTEND_URL`, `EMAIL_USER`/`EMAIL_PASS`
-  (password-reset email via `lib/mailer.js`), plus the SMS/Paystack keys.
+- Backend: `MONGO_URI`, `JWT_SECRET`, `FRONTEND_URL`, `RESEND_API_KEY` +
+  `EMAIL_FROM` (password-reset & support email via `lib/mailer.js`, using the
+  Resend HTTPS API so it works on Vercel), plus the SMS/Paystack keys.
 - Frontend: `VITE_API_BASE_URL`.
