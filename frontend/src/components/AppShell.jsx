@@ -95,6 +95,7 @@ export function AppShell({ children }) {
           >
             Sign out
           </button>
+          <a href="https://primersgroup.ng" target="_blank" rel="noopener noreferrer" className="pc-nav-label" style={{ fontSize: 11.5, color: 'var(--pc-text-dim)', padding: '0 8px', textDecoration: 'none' }}>from Primers Group</a>
         </div>
       </aside>
 
