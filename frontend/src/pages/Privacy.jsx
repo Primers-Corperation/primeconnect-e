@@ -33,7 +33,7 @@ export function Privacy() {
       <p>Service providers who run PrimeConnect for us: our virtual number provider (to rent numbers and receive codes), Paystack (payments and transfers), Vercel and Render (hosting), MongoDB Atlas (database), our email provider, and Primers ID if you use it. They act on our instructions or, for payments, under their own regulated terms. Some store data outside Nigeria, under the transfer safeguards the NDPA allows. We disclose data if the law requires it.</p>
 
       <H>How long we keep it</H>
-      <p>Account data is kept while your account is open. Received codes are kept with the rental for up to 90 days. Payment, wallet and withdrawal records are kept for six years, as Nigerian financial and tax law requires. When you ask us to delete your account, we delete or anonymise everything else within 30 days.</p>
+      <p>Account data, rentals and received codes are kept while your account is open. Payment, wallet and withdrawal records are kept for six years, as Nigerian financial and tax law requires. When you ask us to delete your account, we delete or anonymise everything else within 30 days.</p>
 
       <H>Your rights</H>
       <p>You can ask to access, correct, download or delete your data, object to processing, or withdraw consent, by emailing primerscorperation@gmail.com from your account&apos;s address. We reply within 30 days. You can also complain to the Nigeria Data Protection Commission (ndpc.gov.ng).</p>
