@@ -16,6 +16,7 @@ import {
   resetPasswordSchema,
 } from '../middleware/validation.js';
 import { sendMail } from '../lib/mailer.js';
+import { exchangePrimersCode, validPrimersInput, PrimersIdError } from '../lib/primersId.js';
 
 dotenv.config();
 const router = express.Router();
@@ -26,6 +27,10 @@ const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 function publicUser(user) {
   const obj = user.toObject();
   delete obj.password;
+  delete obj.primersIdSub;
+  delete obj.resetPasswordToken;
+  delete obj.resetPasswordExpires;
+  obj.primersIdLinked = Boolean(user.primersIdSub);
   return obj;
 }
 
@@ -75,12 +80,61 @@ router.post('/login', authLimiter, validateRequest(loginSchema), async (req, res
   }
 });
 
+// Continue with Primers ID. Signs in a linked account or creates a new one. An existing PrimeConnect
+// account with the same email is never merged automatically (emails here were never verified, and
+// accounts hold money): its owner signs in with their password once and connects Primers ID in Settings.
+router.post('/primers', authLimiter, async (req, res) => {
+  if (!validPrimersInput(req.body)) return res.status(400).json({ status: 'error', message: 'That sign-in expired. Please try again.' });
+  try {
+    const who = await exchangePrimersCode(req.body);
+    let user = await User.findOne({ primersIdSub: who.sub });
+    if (!user) {
+      if (await User.exists({ email: who.email })) {
+        return res.status(409).json({
+          status: 'error', code: 'link_required',
+          message: 'A PrimeConnect account already uses this email. Sign in with your password, then connect Primers ID in Settings. Forgot it? Use “Forgot password”.',
+        });
+      }
+      const unusable = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+      user = await User.create({ name: who.name || who.email.split('@')[0], email: who.email, password: unusable, primersIdSub: who.sub });
+    }
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ status: 'success', token, user: publicUser(user) });
+  } catch (err) {
+    if (err instanceof PrimersIdError) return res.status(400).json({ status: 'error', message: err.message });
+    if (err.code === 11000) return res.status(409).json({ status: 'error', message: 'That Primers ID is already connected to another account.' });
+    console.error('Primers ID sign-in error:', err.message);
+    res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
+  }
+});
+
+// Connect a Primers ID to the signed-in account.
+router.post('/primers/link', verifyToken, async (req, res) => {
+  if (!validPrimersInput(req.body)) return res.status(400).json({ status: 'error', message: 'That sign-in expired. Please try again.' });
+  try {
+    const who = await exchangePrimersCode(req.body);
+    const other = await User.findOne({ primersIdSub: who.sub }).select('_id');
+    if (other && String(other._id) !== String(req.userId)) {
+      return res.status(409).json({ status: 'error', message: 'That Primers ID is already connected to another PrimeConnect account.' });
+    }
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
+    user.primersIdSub = who.sub;
+    await user.save();
+    res.json({ status: 'success', user: publicUser(user) });
+  } catch (err) {
+    if (err instanceof PrimersIdError) return res.status(400).json({ status: 'error', message: err.message });
+    console.error('Primers ID link error:', err.message);
+    res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
+  }
+});
+
 // Get the authenticated user's profile.
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
     if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
-    res.json({ status: 'success', user });
+    res.json({ status: 'success', user: publicUser(user) });
   } catch (err) {
     console.error('Get profile error:', err.message);
     res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });

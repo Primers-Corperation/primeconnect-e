@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { Button } from '../components/Button/Button.jsx';
 import { TextField } from '../components/TextField/TextField.jsx';
 import { Card } from '../components/Card/Card.jsx';
+import { PrimersIdButton, OrDivider } from '../components/PrimersIdButton.jsx';
 
 export function Register() {
   const { register } = useAuth();
@@ -37,6 +38,8 @@ export function Register() {
       <Card padding={32} style={{ width: '100%', maxWidth: 400 }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 800, fontFamily: 'var(--pc-font-display)' }}>Create your account</h1>
         <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--pc-text-muted)' }}>Rent numbers, receive SMS codes, top up your wallet.</p>
+        <PrimersIdButton label="Sign up with Primers ID" />
+        <OrDivider text="or create a PrimeConnect password" />
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Obi" required />
           <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
@@ -46,6 +49,9 @@ export function Register() {
         </form>
         <p style={{ marginTop: 20, fontSize: 13.5, color: 'var(--pc-text-muted)' }}>
           Already have an account? <Link to="/login" style={{ color: 'var(--pc-text)' }}>Sign in</Link>
+        </p>
+        <p style={{ marginTop: 16, fontSize: 12, color: 'var(--pc-text-muted)' }}>
+          <Link to="/privacy" style={{ color: 'var(--pc-text-muted)' }}>Privacy Policy</Link>
         </p>
       </Card>
     </div>

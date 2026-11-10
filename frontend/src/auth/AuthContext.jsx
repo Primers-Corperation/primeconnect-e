@@ -36,6 +36,10 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  const signInWithToken = useCallback((nextToken, nextUser) => {
+    persist(nextToken, nextUser);
+  }, []);
+
   const updateUser = useCallback((nextUser) => {
     const { password, ...safeUser } = nextUser || {};
     localStorage.setItem('pc_user', JSON.stringify(safeUser));
@@ -55,7 +59,7 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   return (
-    <AuthContext.Provider value={{ token, user, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ token, user, login, register, logout, updateUser, signInWithToken }}>
       {children}
     </AuthContext.Provider>
   );

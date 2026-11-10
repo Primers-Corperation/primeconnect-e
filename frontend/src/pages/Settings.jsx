@@ -5,6 +5,7 @@ import { TextField } from '../components/TextField/TextField.jsx';
 import { Button } from '../components/Button/Button.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { updateProfile } from '../api/auth.js';
+import { PrimersIdButton } from '../components/PrimersIdButton.jsx';
 
 export function Settings() {
   const { user, updateUser } = useAuth();
@@ -77,6 +78,22 @@ export function Settings() {
             {notice ? <div style={{ fontSize: 13, color: 'var(--pc-success)' }}>{notice}</div> : null}
             <Button type="submit" disabled={loading}>{loading ? 'Saving…' : 'Save changes'}</Button>
           </form>
+        </Card>
+
+        <Card padding={24} style={{ maxWidth: 480, marginTop: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pc-text)', marginBottom: 6 }}>Primers ID</div>
+          {user?.primersIdLinked ? (
+            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--pc-text-muted)' }}>
+              Connected. You can sign in with “Continue with Primers ID”. Manage it at <a href="https://id.primersgroup.ng" style={{ color: 'var(--pc-text)' }}>id.primersgroup.ng</a>.
+            </p>
+          ) : (
+            <>
+              <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--pc-text-muted)' }}>
+                Use one Primers account for PrimeConnect, BraidUp and other Primers apps. Your PrimeConnect password keeps working.
+              </p>
+              <PrimersIdButton label="Connect Primers ID" returnTo="/settings" mode="link" />
+            </>
+          )}
         </Card>
       </div>
     </AppShell>

@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './auth/AuthContext.jsx';
 import { ProtectedRoute } from './auth/ProtectedRoute.jsx';
 
 const Login = lazy(() => import('./pages/Login.jsx'));
+const PrimersReturn = lazy(() => import('./pages/PrimersReturn.jsx'));
+const Privacy = lazy(() => import('./pages/Privacy.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
@@ -44,6 +46,8 @@ export function App() {
         <Routes>
           <Route path="/" element={<Root />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/primers" element={<PrimersReturn />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
