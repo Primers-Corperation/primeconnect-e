@@ -38,7 +38,7 @@ export function Register() {
       <Card padding={32} style={{ width: '100%', maxWidth: 400 }}>
         <h1 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 800, fontFamily: 'var(--pc-font-display)' }}>Create your account</h1>
         <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--pc-text-muted)' }}>Rent numbers, receive SMS codes, top up your wallet.</p>
-        <PrimersIdButton label="Sign up with Primers ID" />
+        <PrimersIdButton label="Sign up with Primers ID" mode="signup" />
         <OrDivider text="or create a PrimeConnect password" />
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Obi" required />
