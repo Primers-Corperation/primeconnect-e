@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { markPrimersLinked } from '../lib/primersFollow.js';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { Card } from '../components/Card/Card.jsx';
@@ -28,6 +29,7 @@ export function PrimersReturn() {
           const { data } = await client.post('/api/auth/primers', { code: r.code, verifier: r.verifier });
           signInWithToken(data.token, data.user);
         }
+        markPrimersLinked(true);
         navigate(r.returnTo, { replace: true });
       } catch (err) {
         setBack(mode === 'link' ? '/settings' : '/login');

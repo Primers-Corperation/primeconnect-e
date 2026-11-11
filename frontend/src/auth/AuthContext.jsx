@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import * as authApi from '../api/auth.js';
+import { followPrimersId, markPrimersLinked } from '../lib/primersFollow.js';
+import { startPrimersSignIn } from '../lib/primersId.js';
 
 const AuthContext = createContext(null);
 
@@ -27,12 +29,14 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     const data = await authApi.login(email, password);
     persist(data.token, data.user);
+    markPrimersLinked(false);
     return data.user;
   }, []);
 
   const register = useCallback(async (name, email, password) => {
     const data = await authApi.register(name, email, password);
     persist(data.token, data.user);
+    markPrimersLinked(false);
     return data.user;
   }, []);
 
@@ -49,9 +53,18 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem('pc_token');
     localStorage.removeItem('pc_user');
+    markPrimersLinked(false);
     setToken(null);
     setUser(null);
   }, []);
+
+  // Follow the Primers bar: an account switch there signs you in here as that account; signing out of
+  // Primers ID signs you out here if you came in with Primers ID.
+  useEffect(() => followPrimersId({
+    isSignedIn: () => !!localStorage.getItem('pc_token'),
+    signIn: () => { startPrimersSignIn('primeconnect', window.location.pathname + window.location.search).catch(() => {}); },
+    signOut: () => { logout(); window.location.assign('/login'); },
+  }), [logout]);
 
   useEffect(() => {
     window.addEventListener('pc:unauthorized', logout);
