@@ -99,7 +99,13 @@ export function AppShell({ children }) {
         </div>
       </aside>
 
-      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>{children}</main>
+      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {/* Primers bar (apps + your Primers ID), filled in by id.primersgroup.ng/bar.js */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 16px 0', minHeight: 50 }}>
+          <span id="primers-bar-slot" style={{ display: 'flex', alignItems: 'center' }} />
+        </div>
+        {children}
+      </main>
     </div>
   );
 }
