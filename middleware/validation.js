@@ -8,7 +8,7 @@ export const validateRequest = (schema) => {
       next();
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const errors = err.errors.map(e => ({
+        const errors = err.issues.map(e => ({
           field: e.path.join('.'),
           message: e.message,
         }));
@@ -58,7 +58,7 @@ export const walletTopupSchema = z.object({
 
 export const paystackInitSchema = z.object({
   amount: z
-    .number({ invalid_type_error: 'Amount must be a number' })
+    .number({ error: 'Amount must be a number' })
     .min(100, 'Minimum top-up is ₦100')
     .max(10000000, 'Amount exceeds the maximum top-up limit'),
 });
@@ -84,7 +84,7 @@ export const resolveAccountSchema = z.object({
 
 export const withdrawalSchema = z.object({
   amount: z
-    .number({ invalid_type_error: 'Amount must be a number' })
+    .number({ error: 'Amount must be a number' })
     .min(1000, 'Minimum withdrawal is ₦1,000')
     .max(10000000, 'Amount exceeds the maximum withdrawal limit'),
   accountNumber: z.string().regex(/^\d{10}$/, 'Enter a valid 10-digit account number'),
