@@ -39,3 +39,20 @@ export function finishPrimersSignIn() {
   const returnTo = /^\/(?!\/)/.test(saved.returnTo || '') ? saved.returnTo : '/dashboard';
   return { code, verifier: saved.verifier, returnTo, mode: saved.mode === 'link' ? 'link' : 'signin' };
 }
+
+// A pending "connect your Primers ID" after a password sign-in (15-minute ticket from our server).
+const TICKET = 'primers-id-link-ticket';
+export function savePendingLink(ticket, email) {
+  try { sessionStorage.setItem(TICKET, JSON.stringify({ ticket, email, at: Date.now() })); } catch { /* storage off */ }
+}
+export function readPendingLink() {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(TICKET) || 'null');
+    if (v && v.ticket && Date.now() - v.at < 14 * 60_000) return v;
+  } catch { /* ignore */ }
+  clearPendingLink();
+  return null;
+}
+export function clearPendingLink() {
+  try { sessionStorage.removeItem(TICKET); } catch { /* ignore */ }
+}

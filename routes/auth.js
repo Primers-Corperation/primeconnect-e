@@ -80,6 +80,22 @@ router.post('/login', authLimiter, validateRequest(loginSchema), async (req, res
   }
 });
 
+// A short-lived ticket that carries a verified Primers ID across one password sign-in, so the
+// person can connect it without starting over. Signed with its own key so it can never be used
+// as a session token.
+const LINK_TICKET_TTL = '15m';
+const linkKey = () => `${process.env.JWT_SECRET}:primers-link-ticket`;
+export function signLinkTicket(sub, email) {
+  return jwt.sign({ purpose: 'primers_link', sub, email }, linkKey(), { expiresIn: LINK_TICKET_TTL });
+}
+export function readLinkTicket(ticket) {
+  if (typeof ticket !== 'string' || ticket.length > 2000) return null;
+  try {
+    const c = jwt.verify(ticket, linkKey());
+    return c.purpose === 'primers_link' && c.sub && c.email ? c : null;
+  } catch { return null; }
+}
+
 // Continue with Primers ID. Signs in a linked account or creates a new one. An existing PrimeConnect
 // account with the same email is never merged automatically (emails here were never verified, and
 // accounts hold money): its owner signs in with their password once and connects Primers ID in Settings.
@@ -90,9 +106,10 @@ router.post('/primers', authLimiter, async (req, res) => {
     let user = await User.findOne({ primersIdSub: who.sub });
     if (!user) {
       if (await User.exists({ email: who.email })) {
+        const linkTicket = signLinkTicket(who.sub, who.email);
         return res.status(409).json({
-          status: 'error', code: 'link_required',
-          message: 'A PrimeConnect account already uses this email. Sign in with your password, then connect Primers ID in Settings. Forgot it? Use “Forgot password”.',
+          status: 'error', code: 'link_required', linkTicket, email: who.email,
+          message: 'You already have a PrimeConnect account with this email. Enter its password once to connect your Primers ID. Forgot it? Use “Forgot password”.',
         });
       }
       const unusable = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
@@ -104,6 +121,33 @@ router.post('/primers', authLimiter, async (req, res) => {
     if (err instanceof PrimersIdError) return res.status(400).json({ status: 'error', message: err.message });
     if (err.code === 11000) return res.status(409).json({ status: 'error', message: 'That Primers ID is already connected to another account.' });
     console.error('Primers ID sign-in error:', err.message);
+    res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
+  }
+});
+
+// Finish connecting after a password sign-in, using the ticket from "Continue with Primers ID".
+// The ticket proves the Primers ID (verified email); the session proves the password. Both must be
+// for the same email, so neither half alone can attach a Primers ID to someone else's wallet.
+router.post('/primers/link-ticket', authLimiter, verifyToken, async (req, res) => {
+  const claim = readLinkTicket(req.body?.ticket);
+  if (!claim) return res.status(400).json({ status: 'error', message: 'That link expired. Please try Continue with Primers ID again.' });
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
+    if (String(user.email || '').toLowerCase() !== String(claim.email).toLowerCase()) {
+      return res.status(403).json({ status: 'error', message: 'That Primers ID belongs to a different email than this account.' });
+    }
+    if (user.primersIdSub && user.primersIdSub !== claim.sub) {
+      return res.status(409).json({ status: 'error', message: 'This account is already connected to another Primers ID.' });
+    }
+    const other = await User.findOne({ primersIdSub: claim.sub, _id: { $ne: user._id } }).select('_id');
+    if (other) return res.status(409).json({ status: 'error', message: 'That Primers ID is already connected to another PrimeConnect account.' });
+    user.primersIdSub = claim.sub;
+    await user.save();
+    res.json({ status: 'success', user: publicUser(user) });
+  } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ status: 'error', message: 'That Primers ID is already connected to another PrimeConnect account.' });
+    console.error('Primers ID ticket link error:', err.message);
     res.status(503).json({ status: 'error', message: 'Service temporarily unavailable, please try again' });
   }
 });

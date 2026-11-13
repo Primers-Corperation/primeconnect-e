@@ -3,7 +3,7 @@ import { markPrimersLinked } from '../lib/primersFollow.js';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { Card } from '../components/Card/Card.jsx';
-import { finishPrimersSignIn } from '../lib/primersId.js';
+import { finishPrimersSignIn, savePendingLink } from '../lib/primersId.js';
 import client from '../api/client.js';
 
 // Where Primers ID sends people back with a one-time code (to sign in, or to connect from Settings).
@@ -32,6 +32,13 @@ export function PrimersReturn() {
         markPrimersLinked(true);
         navigate(r.returnTo, { replace: true });
       } catch (err) {
+        const body = err.response?.data;
+        if (mode === 'signin' && body?.code === 'link_required' && body.linkTicket) {
+          // Same email as an existing PrimeConnect account: one password sign-in connects them.
+          savePendingLink(body.linkTicket, body.email);
+          navigate('/login?connect=primers', { replace: true });
+          return;
+        }
         setBack(mode === 'link' ? '/settings' : '/login');
         setError(err.response?.data?.message || err.message || "Couldn't sign you in");
       }
