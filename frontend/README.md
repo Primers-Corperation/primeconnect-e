@@ -21,8 +21,8 @@ server implementing the same `/api/auth` and `/api/wallet` contract.
 
 Only these backend endpoints exist, so only these are wired to real data:
 
-- `POST /api/auth/register`, `POST /api/auth/login` — real signup/sign-in, JWT stored client-side.
-- `GET /api/wallet/balance/:userId` — the Dashboard's wallet card balance.
+- `POST /api/auth/register`, `POST /api/auth/login` - real signup/sign-in, JWT stored client-side.
+- `GET /api/wallet/balance/:userId` - the Dashboard's wallet card balance.
 
 The stat row, "buy a number" browser, active activations, and recent-activity ledger have **no
 backing endpoints** in the current backend (no list-activations, list-transactions, or stats
@@ -31,7 +31,7 @@ up requires adding those endpoints to the backend first.
 
 ## Routes
 
-- `/login`, `/register` — auth forms.
-- `/dashboard` — the implemented design, protected by a JWT check.
-- `/rent-number`, `/marketplace`, `/wallet`, `/history` — placeholder pages (nav targets only;
+- `/login`, `/register` - auth forms.
+- `/dashboard` - the implemented design, protected by a JWT check.
+- `/rent-number`, `/marketplace`, `/wallet`, `/history` - placeholder pages (nav targets only;
   no other screens were included in the design export).

@@ -6,7 +6,7 @@ import { validateRequest, supportReportSchema } from '../middleware/validation.j
 
 const router = express.Router();
 
-// Report an issue — emails the report to the configured admin inbox,
+// Report an issue - emails the report to the configured admin inbox,
 // including the reporting user's name/email so they can be replied to.
 router.post('/report', supportLimiter, validateRequest(supportReportSchema), async (req, res) => {
   const { subject, message } = req.body;

@@ -61,7 +61,7 @@ export function Marketplace() {
         ) : accounts.length === 0 ? (
           <div style={{ border: '1px dashed var(--pc-border-strong)', borderRadius: 'var(--pc-radius-xl)', padding: '32px 24px', textAlign: 'center', color: 'var(--pc-text-muted)' }}>
             <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--pc-text)' }}>No accounts available</div>
-            <div style={{ fontSize: 13, marginTop: 4 }}>Check back soon — new listings appear here when they're in stock.</div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>Check back soon. New listings appear here when they're in stock.</div>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>

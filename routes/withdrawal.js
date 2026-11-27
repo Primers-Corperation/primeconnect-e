@@ -8,7 +8,7 @@ import { validateRequest, resolveAccountSchema, withdrawalSchema } from '../midd
 
 const MIN_WITHDRAWAL = 1000;
 
-// Bank list rarely changes — cache in-memory for an hour (same pattern as
+// Bank list rarely changes - cache in-memory for an hour (same pattern as
 // lib/fx.js), shared across warm serverless invocations via `global`.
 const bankCache = global._bankCache || (global._bankCache = { banks: null, fetchedAt: 0 });
 const BANK_CACHE_TTL_MS = 60 * 60 * 1000;
@@ -29,7 +29,7 @@ router.get('/banks', async (req, res) => {
   }
 });
 
-// Resolve an account number to its real holder name — read-only, no money
+// Resolve an account number to its real holder name - read-only, no money
 // movement. The UI must show this to the user for confirmation before
 // they can submit a withdrawal.
 router.post('/resolve-account', validateRequest(resolveAccountSchema), async (req, res) => {
@@ -51,7 +51,7 @@ router.post('/', validateRequest(withdrawalSchema), async (req, res) => {
     return res.status(400).json({ status: 'error', message: `Minimum withdrawal is ₦${MIN_WITHDRAWAL.toLocaleString('en-NG')}.` });
   }
 
-  // Re-resolve server-side — never trust a client-supplied account name.
+  // Re-resolve server-side - never trust a client-supplied account name.
   let accountName;
   try {
     const account = await resolveAccount(accountNumber, bankCode);
@@ -61,7 +61,7 @@ router.post('/', validateRequest(withdrawalSchema), async (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Could not verify this account. Check the number and bank.' });
   }
 
-  // Reserve funds atomically before any external call — two concurrent
+  // Reserve funds atomically before any external call - two concurrent
   // withdrawals can't both succeed against a balance that only covers one.
   const wallet = await Wallet.findOneAndUpdate(
     { userId, balance: { $gte: amount } },
@@ -92,10 +92,10 @@ router.post('/', validateRequest(withdrawalSchema), async (req, res) => {
     await withdrawal.save();
 
     if (transfer.status === 'otp') {
-      // OTP finalization isn't supported by this self-service flow — this
+      // OTP finalization isn't supported by this self-service flow - this
       // withdrawal can never complete automatically, so refund immediately
       // rather than leave money stuck in limbo.
-      console.error('Transfer requires OTP — refunding. Check Paystack transfer OTP setting.');
+      console.error('Transfer requires OTP - refunding. Check Paystack transfer OTP setting.');
       withdrawal.status = 'failed';
       await withdrawal.save();
       await Wallet.updateOne({ userId }, { $inc: { balance: amount } });
@@ -104,14 +104,14 @@ router.post('/', validateRequest(withdrawalSchema), async (req, res) => {
 
     // Normal case: Paystack returns 'pending' here and confirms the real
     // outcome via webhook (transfer.success / transfer.failed / .reversed).
-    // Do not refund on this response — the webhook is authoritative.
+    // Do not refund on this response - the webhook is authoritative.
     return res.json({ status: 'success', message: 'Your withdrawal is being processed.', balance: wallet.balance });
   } catch (err) {
     console.error('Withdrawal request error:', err.response?.data || err.message);
     // An outright request failure (bad recipient, provider-side rejection)
-    // is a confirmed non-success — safe to refund. A network/timeout error
+    // is a confirmed non-success - safe to refund. A network/timeout error
     // is ambiguous (the transfer may have actually gone through), so it is
-    // NOT refunded here — left pending for the webhook to resolve, exactly
+    // NOT refunded here - left pending for the webhook to resolve, exactly
     // like the equivalent case in the Grizzly rental flow.
     if (err.response) {
       withdrawal.status = 'failed';

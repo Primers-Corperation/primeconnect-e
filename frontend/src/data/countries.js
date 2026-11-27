@@ -1,6 +1,6 @@
 // Comprehensive country list with emoji flags, dial codes, and Grizzly SMS IDs.
 // Sorted alphabetically. The `id` matches Grizzly SMS country identifiers.
-// This is the client-side fallback — the API can override with a filtered subset.
+// This is the client-side fallback - the API can override with a filtered subset.
 
 const COUNTRIES = [
   { id: '1', name: 'Afghanistan', flag: '🇦🇫', code: 'AF', dial: '+93' },

@@ -21,7 +21,7 @@ export function useActivationPolling(activations, setActivations) {
           const updated = await getActivationStatus(a._id);
           setActivations((prev) => prev.map((x) => (x._id === a._id ? updated : x)));
         } catch {
-          // transient error — retry next tick
+          // transient error - retry next tick
         }
       }
     }, 8000);

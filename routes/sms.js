@@ -97,7 +97,7 @@ router.get('/prices', async (req, res) => {
   }
 });
 
-// Real Grizzly country list (passthrough of getCountries) — diagnostic,
+// Real Grizzly country list (passthrough of getCountries) - diagnostic,
 // to confirm real country names/IDs before the catalog UI is built.
 router.get('/countries', async (req, res) => {
   if (!process.env.GRIZZLY_API_KEY) {
@@ -119,7 +119,7 @@ router.get('/countries', async (req, res) => {
   }
 });
 
-// Real Grizzly service list (passthrough of getServicesList) — diagnostic.
+// Real Grizzly service list (passthrough of getServicesList) - diagnostic.
 router.get('/services', async (req, res) => {
   if (!process.env.GRIZZLY_API_KEY) {
     return res.status(503).json({ status: 'error', message: 'Not configured yet.' });
@@ -161,7 +161,7 @@ router.get('/activations', async (req, res) => {
 // Calls Grizzly's setStatus (cancel) for an activation and, only on an
 // explicit recognized success (ACCESS_CANCEL), marks it `finalStatus` and
 // refunds the wallet. An ambiguous/unrecognized provider response never
-// refunds or changes status — shared by both the manual cancel endpoint
+// refunds or changes status - shared by both the manual cancel endpoint
 // and the automatic no-code expiry below, so both follow the same
 // fail-safe rule.
 async function cancelAndRefund(activation, finalStatus, refundDescription) {
@@ -188,7 +188,7 @@ async function cancelAndRefund(activation, finalStatus, refundDescription) {
 // activations. Response codes follow the documented SMS-activation-style
 // convention; anything unrecognized is a no-op rather than a guess, so an
 // unexpected format never corrupts activation state. If still pending
-// after 10 minutes with no code, automatically cancels and refunds —
+// after 10 minutes with no code, automatically cancels and refunds -
 // same fail-safe rule as manual cancel (no confirmed provider cancel, no
 // refund).
 router.get('/activations/:id/status', async (req, res) => {
@@ -231,7 +231,7 @@ router.get('/activations/:id/status', async (req, res) => {
 
 // Cancel a pending rental within the 15-minute window, refunding the
 // wallet only on an explicit, recognized cancellation success from
-// Grizzly — an ambiguous response never triggers a refund.
+// Grizzly - an ambiguous response never triggers a refund.
 router.post('/activations/:id/cancel', async (req, res) => {
   if (!process.env.GRIZZLY_API_KEY) {
     return res.status(503).json({ status: 'error', message: 'Not configured yet.' });
@@ -271,7 +271,7 @@ router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), 
     return res.status(400).json({ status: 'error', message: 'Unsupported service.' });
   }
 
-  // Look up the live, authoritative price for this exact service+country —
+  // Look up the live, authoritative price for this exact service+country -
   // never trust a client-supplied price.
   let priceNgn;
   try {
@@ -320,7 +320,7 @@ router.post('/getNumber', smsLimiter, validateRequest(getNumberSchemaNoUserId), 
       return res.json({ status: 'success', activation });
     }
 
-    // Grizzly didn't provide a number — refund the reservation.
+    // Grizzly didn't provide a number - refund the reservation.
     await Wallet.updateOne({ userId }, { $inc: { balance: priceNgn } });
     return res.status(400).json({ status: 'error', message: text });
   } catch (err) {

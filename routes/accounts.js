@@ -49,7 +49,7 @@ router.post('/purchase', validateRequest(accountPurchaseSchema), async (req, res
     );
 
     if (!claimed) {
-      // Lost the race for the account after debiting — refund the wallet.
+      // Lost the race for the account after debiting - refund the wallet.
       await Wallet.updateOne(
         { userId },
         {

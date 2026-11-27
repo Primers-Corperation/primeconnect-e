@@ -200,7 +200,7 @@ export function Wallet() {
               <TextField label="Amount (₦)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1000" min="100" />
               {chargedAmount != null ? (
                 <div style={{ fontSize: 13, color: 'var(--pc-text-muted)' }}>
-                  You'll be charged <strong>₦{chargedAmount.toLocaleString('en-NG')}</strong> on Paystack (covers processing fees) — ₦{Number(amount).toLocaleString('en-NG')} lands in your wallet.
+                  You'll be charged <strong>₦{chargedAmount.toLocaleString('en-NG')}</strong> on Paystack, which covers processing fees, and ₦{Number(amount).toLocaleString('en-NG')} lands in your wallet.
                 </div>
               ) : null}
               {error ? <div style={{ fontSize: 13, color: 'var(--pc-danger)' }}>{error}</div> : null}

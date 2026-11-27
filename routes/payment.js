@@ -48,7 +48,7 @@ async function creditIfPending(reference, paystackAmountKobo, channel) {
 // Idempotently resolve a withdrawal to its final state. The status
 // transition is atomic (pending -> finalStatus): only the caller that wins
 // the transition acts on it, so webhook retries are always safe. Only a
-// failed/reversed outcome refunds the wallet — a success needs no wallet
+// failed/reversed outcome refunds the wallet - a success needs no wallet
 // change (it was already debited when the withdrawal was requested).
 async function resolveWithdrawal(reference, finalStatus) {
   const withdrawal = await Withdrawal.findOneAndUpdate(
@@ -73,7 +73,7 @@ async function resolveWithdrawal(reference, finalStatus) {
 const router = express.Router();
 
 // Preview the fee cushion for a desired wallet credit, before the user
-// commits — read-only, no Payment record created.
+// commits - read-only, no Payment record created.
 router.get('/quote', (req, res) => {
   const amount = Number(req.query.amount);
   if (!Number.isFinite(amount) || amount < 100) {

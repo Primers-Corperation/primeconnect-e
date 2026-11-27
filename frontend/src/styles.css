@@ -1,5 +1,5 @@
 /* ============================================================
-   PrimeConnect Design System — Global tokens & base
+   PrimeConnect Design System - Global tokens & base
    Accessibility-first, high-contrast black-on-white,
    bold grotesque display type, underlined links.
    ============================================================ */
@@ -103,7 +103,7 @@ body {
 h1, h2, h3 { font-family: var(--pc-font-display); letter-spacing: -0.02em; }
 
 /* ============================================================
-   Form controls — global reset
+   Form controls - global reset
    ============================================================ */
 input, select, textarea, button {
   font-family: inherit;
@@ -256,7 +256,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ============================================================
-   WalletCard — premium animations
+   WalletCard - premium animations
    ============================================================ */
 .pc-wallet-card {
   position: relative;

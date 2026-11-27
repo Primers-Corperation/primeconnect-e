@@ -1,19 +1,19 @@
-# PrimeConnect — Product & Frontend Spec
+# PrimeConnect - Product & Frontend Spec
 
 A single reference for the PrimeConnect frontend and the backend endpoints it
 relies on. The repo already contains a `frontend/` app; use this to (a) add the
 password-reset and history/owned-data flows, and (b) audit the existing
-frontend against these routes — do not blindly regenerate over existing work.
+frontend against these routes - do not blindly regenerate over existing work.
 
 ## Product
 
 Nigerian platform (amounts in ₦):
 
-- **Wallet** — fund a balance (Paystack) and spend it.
-- **SMS / virtual numbers** — rent a number to receive OTPs; send plain SMS.
-- **Accounts marketplace** — browse and buy pre-provisioned accounts.
+- **Wallet** - fund a balance (Paystack) and spend it.
+- **SMS / virtual numbers** - rent a number to receive OTPs; send plain SMS.
+- **Accounts marketplace** - browse and buy pre-provisioned accounts.
 
-Email/password auth with a 7-day JWT. Look & feel: modern fintech — dark-first
+Email/password auth with a 7-day JWT. Look & feel: modern fintech - dark-first
 with a light toggle, gradient accent, rounded-2xl cards, mobile-first,
 accessible.
 
@@ -23,7 +23,7 @@ React 18 + Vite, Tailwind (+ shadcn/ui), React Router v6, TanStack Query,
 axios (one instance + interceptors), react-hook-form + zod, sonner toasts,
 lucide-react. API base from `VITE_API_BASE_URL` (default `http://localhost:3000`).
 
-## API — existing
+## API - existing
 
 Errors are usually `{ status:"error", message, errors?:[{field,message}] }`.
 
@@ -33,7 +33,7 @@ Errors are usually `{ status:"error", message, errors?:[{field,message}] }`.
 
 The `user` object never includes the password hash.
 
-### Auth (protected — `Authorization: Bearer <token>`)
+### Auth (protected - `Authorization: Bearer <token>`)
 - `GET /api/auth/me` → `{status:"success",user}`.
 - `PUT /api/auth/me` `{name?,email?,currentPassword?,newPassword?}` → `{status:"success",user}`; `400` if changing password without/with wrong current password; `409` if email already in use.
 
@@ -43,7 +43,7 @@ The `user` object never includes the password hash.
 
 ### Wallet (protected)
 - `GET /api/wallet/balance/:userId` (must equal own `_id`) → `200 {status:"success",balance}`; `403` mismatch; `404` no wallet (treat as ₦0).
-- `POST /api/wallet/topup` — Paystack-backed top-up (may return a checkout reference to redirect to).
+- `POST /api/wallet/topup` - Paystack-backed top-up (may return a checkout reference to redirect to).
 
 ### Accounts (protected)
 - `GET /api/accounts/available` → `{status:"success",accounts:[{_id,service,accountDetails,price,status,createdAt}]}`.
@@ -55,7 +55,7 @@ The `user` object never includes the password hash.
 - `POST /api/sms/getNumber` `{service,country,maxPrice?,providers?[],exclude?[]}` → `{status:"success",activationId,number}`.
 - `POST /api/sms/send` `{phone:/^234\d{10}$/ (e.g. 2348012345678), message:1–160}` → `{success:true,messageId}`.
 
-## API — endpoints to add (so history / owned views show real data)
+## API - endpoints to add (so history / owned views show real data)
 
 - `GET /api/wallet/transactions` → `{status:"success",transactions:[{type,amount,description,date}]}` (paginate `?limit&?cursor`). Backend returns `wallet.transactions`, newest first.
 - `GET /api/accounts/mine` → `{status:"success",accounts:[...owned...]}` via `Account.find({ userId: req.userId })`.
@@ -64,24 +64,24 @@ The `user` object never includes the password hash.
 
 - `/` Landing.
 - `/register`, `/login` (login has a "Forgot password?" link).
-- `/forgot-password` — email field → forgot-password. **Always** show the same
+- `/forgot-password` - email field → forgot-password. **Always** show the same
   "If that email is registered, we've sent a link" confirmation (no branching
   on existence). "Back to login" link.
-- `/reset-password` — reads `?token=…`; new-password + confirm (match, min 6,
+- `/reset-password` - reads `?token=…`; new-password + confirm (match, min 6,
   zod) → reset-password. Success → toast + redirect `/login`. `400` →
   "link invalid or expired" + link back to `/forgot-password`. Missing token →
   same invalid state.
-- `/app` Dashboard — gradient balance card + quick actions; recent activity
+- `/app` Dashboard - gradient balance card + quick actions; recent activity
   from `/api/wallet/transactions`.
-- `/app/wallet` — balance + fund modal (presets ₦500/1k/2k/5k + custom) via
+- `/app/wallet` - balance + fund modal (presets ₦500/1k/2k/5k + custom) via
   Paystack; transaction history from `/api/wallet/transactions`.
-- `/app/numbers` — rent-number form → result card (number + activationId, copy,
+- `/app/numbers` - rent-number form → result card (number + activationId, copy,
   "waiting for OTP" state); list from `/api/sms/activations`.
-- `/app/sms` — send-SMS form (234… helper, live 160-char counter) → toast.
-- `/app/marketplace` — grid of available accounts; Buy → confirm → purchase;
+- `/app/sms` - send-SMS form (234… helper, live 160-char counter) → toast.
+- `/app/marketplace` - grid of available accounts; Buy → confirm → purchase;
   `400` insufficient → prompt to fund. Optional "My accounts" tab from
   `/api/accounts/mine`.
-- `/app/settings` — profile (name/email + change password) via `/api/auth/me`.
+- `/app/settings` - profile (name/email + change password) via `/api/auth/me`.
 - `404` page.
 
 ## Cross-cutting

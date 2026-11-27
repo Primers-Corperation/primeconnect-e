@@ -5,7 +5,7 @@ export async function getBanks() {
   return data.banks || [];
 }
 
-// Resolves an account number to its real holder name — must be shown to
+// Resolves an account number to its real holder name - must be shown to
 // the user for confirmation before a withdrawal can be submitted.
 export async function resolveAccount({ accountNumber, bankCode }) {
   const { data } = await client.post('/api/wallet/withdraw/resolve-account', { accountNumber, bankCode });

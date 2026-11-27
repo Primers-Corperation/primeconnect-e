@@ -31,19 +31,19 @@ app.use(generalLimiter);
 
 // MongoDB connection
 if (!process.env.MONGO_URI) {
-  console.error('MONGO_URI is not set — database-backed routes will fail until it is configured');
+  console.error('MONGO_URI is not set - database-backed routes will fail until it is configured');
 }
 if (!process.env.JWT_SECRET) {
-  console.error('JWT_SECRET is not set — authentication (register/login/JWT verification) will fail until it is configured');
+  console.error('JWT_SECRET is not set - authentication (register/login/JWT verification) will fail until it is configured');
 }
 if (!process.env.PAYSTACK_SECRET_KEY) {
-  console.warn('PAYSTACK_SECRET_KEY is not set — wallet top-ups will fail until it is configured');
+  console.warn('PAYSTACK_SECRET_KEY is not set - wallet top-ups will fail until it is configured');
 }
 if (!process.env.CLIENT_URL) {
-  console.warn('CLIENT_URL is not set — Paystack callback will fall back to the dashboard default');
+  console.warn('CLIENT_URL is not set - Paystack callback will fall back to the dashboard default');
 }
 if (!process.env.RESEND_API_KEY) {
-  console.warn('RESEND_API_KEY is not set — password-reset and support emails will not be sent until it is configured');
+  console.warn('RESEND_API_KEY is not set - password-reset and support emails will not be sent until it is configured');
 }
 
 app.get("/", (req, res) => {
@@ -54,7 +54,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// Every remaining route needs the DB — connect once (reusing the cached
+// Every remaining route needs the DB - connect once (reusing the cached
 // connection across warm invocations) before reaching any of them, and
 // fail fast and consistently if it's genuinely unreachable.
 app.use(async (req, res, next) => {
@@ -70,7 +70,7 @@ app.use(async (req, res, next) => {
 // Public routes
 app.use('/api/auth', authRoutes);
 
-// Paystack webhook — public (authenticated by HMAC signature, not JWT).
+// Paystack webhook - public (authenticated by HMAC signature, not JWT).
 app.post('/api/payment/webhook', paystackWebhook);
 
 // Protected routes (JWT required)
